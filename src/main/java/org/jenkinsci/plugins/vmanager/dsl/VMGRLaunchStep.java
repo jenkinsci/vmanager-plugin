@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.vmanager.Utils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -29,7 +29,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class VMGRLaunchStep extends Step {
 
@@ -815,7 +815,7 @@ public class VMGRLaunchStep extends Step {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws Descriptor.FormException {
+        public boolean configure(StaplerRequest2 req, JSONObject formData) throws Descriptor.FormException {
 
             save();
             return super.configure(req, formData);

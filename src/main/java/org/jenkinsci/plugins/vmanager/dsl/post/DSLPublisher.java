@@ -21,7 +21,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
@@ -29,7 +28,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.vmanager.SummaryReportParams;
@@ -37,6 +36,7 @@ import org.jenkinsci.plugins.vmanager.Utils;
 import org.jenkinsci.plugins.vmanager.VAPIConnectionParam;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializable {
 
@@ -417,7 +417,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(StaplerRequest2 req, JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
 
