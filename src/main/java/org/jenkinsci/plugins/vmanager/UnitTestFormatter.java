@@ -83,7 +83,7 @@ public class UnitTestFormatter {
 				
 				if (tmpRun.has("duration")) {
 					try{
-						testDuration = new Integer(tmpRun.getString("duration")).intValue();
+						testDuration = Integer.valueOf(tmpRun.getString("duration")).intValue();
 					} catch (Exception e){
 						//In case it's not a number like "undefined"
 					}
@@ -122,7 +122,7 @@ public class UnitTestFormatter {
 			}
 			
 			writer.append("</testsuite>" + "\n");
-                        
+                         
                         utils.saveFileOnDisk(fileOutput, writer.toString());
 			
 		}

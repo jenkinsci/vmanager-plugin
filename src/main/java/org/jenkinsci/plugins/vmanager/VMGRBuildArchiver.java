@@ -35,6 +35,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +77,7 @@ public class VMGRBuildArchiver {
     }
 
     public void setVMGRBuildArchive(boolean isVMGRBuildArchive) {
-        this.vMGRBuildArchive = vMGRBuildArchive;
+        this.vMGRBuildArchive = isVMGRBuildArchive;
     }
 
     public String getArchiveUser() {
@@ -196,7 +197,7 @@ public class VMGRBuildArchiver {
                     apiUrl = apiUrl + "update";
                     HttpURLConnection conn = getVAPIConnection(apiUrl, requireAuth, userCredentials);
                     OutputStream os = conn.getOutputStream();
-                    os.write(updateSessionOwner.getBytes());
+                    os.write(updateSessionOwner.getBytes(StandardCharsets.UTF_8));
                     os.flush();
                     if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
                         String reason = "";
@@ -221,7 +222,7 @@ public class VMGRBuildArchiver {
                 HttpURLConnection conn = getVAPIConnection(apiUrl, requireAuth, userCredentials);
                 OutputStream os = conn.getOutputStream();
                 String input = "{\"rs\":{\"filter\":{\"@c\":\".InFilter\",\"attName\":\"id\",\"operand\":\"IN\",\"values\":[" + buildSdi.getProperty("sessions") + "]}},\"with-session-dir\":" + buildSdi.getProperty("deleteAlsoSessionDirectory").trim() + "}";
-                os.write(input.getBytes());
+                os.write(input.getBytes(StandardCharsets.UTF_8));
                 os.flush();
 
                 if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
@@ -252,10 +253,11 @@ public class VMGRBuildArchiver {
         String errorMessage = "";
         StringBuilder resultFromError = null;
         int responseCode = 0;
+        BufferedReader br = null;
         try {
             resultFromError = new StringBuilder(conn.getResponseMessage());
             responseCode = conn.getResponseCode();
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
+            br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
             String output;
             while ((output = br.readLine()) != null) {
@@ -264,6 +266,13 @@ public class VMGRBuildArchiver {
         } catch (Exception e) {
 
         } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             errorMessage = "Failed : HTTP error code : " + responseCode + " (" + resultFromError + ")\n";
 
             logger.log(Level.SEVERE, errorMessage);
@@ -319,8 +328,8 @@ public class VMGRBuildArchiver {
             // Authentication
             // ----------------------------------------------------------------------------------------
 
-            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-            String authStringEnc = new String(authEncBytes);
+            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes(StandardCharsets.UTF_8));
+            String authStringEnc = new String(authEncBytes, StandardCharsets.UTF_8);
             conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
             // ----------------------------------------------------------------------------------------
         }

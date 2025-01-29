@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -95,16 +96,17 @@ public class SessionStatusHolder {
 			conn = utils.getVAPIConnection(apiURL, requireAuth, user, password, "POST", dynamicUserId, buildId, buildNumber, workPlacePath, listener, connConnTimeOut, connReadTimeout, advConfig);
 
 			OutputStream os = conn.getOutputStream();
-			os.write(postSessionData.getBytes());
+			os.write(postSessionData.getBytes(StandardCharsets.UTF_8));
 			os.flush();
 
 			if (checkResponseCode(conn)) {
-				BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+				BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 				StringBuilder result = new StringBuilder();
 				String output;
 				while ((output = br.readLine()) != null) {
 					result.append(output);
 				}
+				br.close();
 
 				JSONArray tmpArray = JSONArray.fromObject(result.toString());
 				Iterator<JSONObject> iterator = tmpArray.iterator();
@@ -116,7 +118,6 @@ public class SessionStatusHolder {
 				
 				//Retrive all the session params
 				writeSessionIntoFile(sessionObject,postSession,sessionIdName,utils,launcher);
-				
 				
 				
 
@@ -132,7 +133,9 @@ public class SessionStatusHolder {
 			
 			
 		} finally {
-			conn.disconnect();
+			if (conn != null) {
+                            conn.disconnect();
+                        }
 
 		}
 	}
@@ -186,7 +189,7 @@ public class SessionStatusHolder {
 		
 		//String fileOutput = this.workingJobDir + File.separator + buildNumber + "." + buildId + ".session_status.properties";
 		
-                
+                 
                 if (postSession){
                     //Just before writing the file, check if user choose to overwide session status to "Failed" in case the session is in completed state and all runs failed.
                     if (markBuildAsFailedIfAllRunFailed){
@@ -195,7 +198,7 @@ public class SessionStatusHolder {
                             }
 			
                     }
-                
+                 
                     //Just before writing the file, check if user choose to overwide session status to "Failed" in case not all runs passed.
                     if (markBuildAsPassedIfAllRunPassed){
                             if (!sessionData.getTotalRuns().trim().equals(sessionData.getPassed().trim())){
@@ -272,7 +275,7 @@ public class SessionStatusHolder {
 			}
 			
                     }
-                
+                 
                     //Just before continue to the next Jenkins step, check if the user choose to fail the entire Job unless not all runs passed
                     if (failJobUnlessAllRunPassed){
                         //this.listener.getLogger().println("Info - total runs: " + sessionData.getTotalRuns().trim());
@@ -318,7 +321,6 @@ public class SessionStatusHolder {
 			sessionData.setId((prop.getProperty("id") != null) ? prop.getProperty("id") : "NA");
 			sessionData.setServerUrl((prop.getProperty("url") != null) ? prop.getProperty("url") : "NA");
                         sessionData.setIdNames((prop.getProperty("idNames") != null) ? prop.getProperty("idNames") : "NA");
-			
 			
 
 		} catch (IOException ex) {
@@ -436,7 +438,5 @@ public class SessionStatusHolder {
     }
         
         
-	
-	
 
 }

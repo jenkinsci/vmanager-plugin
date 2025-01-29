@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -68,7 +69,7 @@ public class LaunchHolder {
     }
 
     public void performWaiting(String url, boolean requireAuth, String user, String password, TaskListener listener, boolean dynamicUserId, String buildID, int buildNumber, String workPlacePath,
-            int connConnTimeOut, int connReadTimeout, boolean advConfig, boolean notInTestMode, String workingJobDir,Launcher launcher) throws Exception {
+                               int connConnTimeOut, int connReadTimeout, boolean advConfig, boolean notInTestMode, String workingJobDir, Launcher launcher) throws Exception {
 
         String requestMethod = "POST";
         String apiURL = url + "/rest/sessions/list";
@@ -77,8 +78,8 @@ public class LaunchHolder {
         HttpURLConnection conn = null;
         long startTime = new Date().getTime();
         long startTimeForDebugInfo = new Date().getTime();
-        long timeToWaitOverall = stepHolder.getStepSessionTimeout() * 60 * 1000;
-        long timeBetweenPrintStatus = 30 * 60 * 1000;
+        long timeToWaitOverall = stepHolder.getStepSessionTimeout() * 60L * 1000L;
+        long timeBetweenPrintStatus = 30L * 60L * 1000L;
         boolean debugPrint = true;
         String buildResult = null;
 
@@ -99,11 +100,10 @@ public class LaunchHolder {
 
         //While we iterate over session status, we can use it to grab the real session name for later usages
         Map<String, String> sessionIdName = new HashMap<String, String>();
-        
+
         //Since session can finish its execution and start an automatic rerun right after, we need to make sure we wait.
         //We check that by checkig that two times in a row, there are no runs in waiting or running state
         Map<String, String> sessionCompletedLastState = new HashMap<String, String>();
-       
 
         while (keepWaiting) {
 
@@ -155,8 +155,7 @@ public class LaunchHolder {
                 String sessionState = null;
                 int numOfRunningRuns = 0;
                 int numOfWaitingRuns = 0;
-                
-                
+
                 while (sessionIter.hasNext()) {
                     tmpSessionId = sessionIter.next();
                     tmpPostData = postData1 + tmpSessionId + postData2;
@@ -166,16 +165,17 @@ public class LaunchHolder {
                                 connReadTimeout, advConfig);
 
                         OutputStream os = conn.getOutputStream();
-                        os.write(tmpPostData.getBytes());
+                        os.write(tmpPostData.getBytes(StandardCharsets.UTF_8));
                         os.flush();
 
                         if (checkResponseCode(conn)) {
-                            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
                             StringBuilder result = new StringBuilder();
                             String output;
                             while ((output = br.readLine()) != null) {
                                 result.append(output);
                             }
+                            br.close();
 
                             JSONArray tmpArray = JSONArray.fromObject(result.toString());
 
@@ -194,17 +194,17 @@ public class LaunchHolder {
 
                             JSONObject tmp = tmpArray.getJSONObject(0);
                             sessionState = tmp.getString("session_status");
-                            numOfRunningRuns = tmp.getInt("running");
-                            numOfWaitingRuns = tmp.getInt("waiting");
-                            
+                            numOfRunningRuns = Integer.valueOf(tmp.getString("running"));
+                            numOfWaitingRuns = Integer.valueOf(tmp.getString("waiting"));
+
                             //Treat real session state when ALL runs completed
-                            if (numOfRunningRuns == 0 && numOfWaitingRuns == 0){
+                            if (numOfRunningRuns == 0 && numOfWaitingRuns == 0) {
                                 String lastKnownSessionCompletedState = sessionCompletedLastState.get(tmpSessionId);
-                                if ("true".equals(lastKnownSessionCompletedState)){
+                                if ("true".equals(lastKnownSessionCompletedState)) {
                                     //This is already the second time. that means no auto re-run and the session don't have any run in running or waiting state - mark as done.
                                     sessionFinalState.put(tmpSessionId, "true");
                                     //Special Treat in case the session state is "Failed" but runs kept running and session completes succesfully
-                                    if (("failed").equals(sessionState) && checkIfAllSessionsEnded(tmpSessionId, listener)){
+                                    if (("failed").equals(sessionState) && checkIfAllSessionsEnded(tmpSessionId, listener)) {
                                         buildResult = "(" + new Date().toString() + ") - All sessions got into a state in which the build step can continue.\n";
                                         if (notInTestMode) {
                                             listener.getLogger().print(buildResult);
@@ -219,13 +219,13 @@ public class LaunchHolder {
                                     //Mark for first try.  If re-run is started, the second try will invalidate it.
                                     sessionCompletedLastState.put(tmpSessionId, "true");
                                     sessionFinalState.put(tmpSessionId, "false");
-                                    
+
                                 }
                             } else {
                                 sessionCompletedLastState.put(tmpSessionId, "false");
                                 sessionFinalState.put(tmpSessionId, "false");
                             }
-                
+
                             sessionIdName.put(tmpSessionId, tmp.getString("name"));
                             if (notInTestMode) {
                                 if (debugPrint) {
@@ -239,7 +239,7 @@ public class LaunchHolder {
                                 }
                             }
 
-                            if (toContinue(sessionState, tmpSessionId,listener)) {
+                            if (toContinue(sessionState, tmpSessionId, listener)) {
                                 // MARK THAT ALL SESSION ENDED
                                 buildResult = "(" + new Date().toString() + ") - All sessions got into a state in which the build step can continue.\n";
                                 if (notInTestMode) {
@@ -251,10 +251,9 @@ public class LaunchHolder {
                                 keepWaiting = false;
                                 break;
                             }
-                            
-                           
 
-                            if (toFail(sessionState, tmpSessionId,listener)) {
+
+                            if (toFail(sessionState, tmpSessionId, listener)) {
                                 // MARK_BUILD_FAIL
                                 buildResult = "(" + new Date().toString() + ") - State of Session '" + tmp.getString("name") + "' (" + tmpSessionId + ") = " + tmp.getString("session_status")
                                         + " - Marking build failed.\n";
@@ -267,7 +266,7 @@ public class LaunchHolder {
                                 break;
                             }
 
-                            if (toIgnore(sessionState, tmpSessionId,listener)) {
+                            if (toIgnore(sessionState, tmpSessionId, listener)) {
                                 // Don't do anything, just continue.
                             }
                         }
@@ -287,8 +286,9 @@ public class LaunchHolder {
                         }
                         e.printStackTrace();
                     } finally {
-                        conn.disconnect();
-
+                        if (conn != null) {
+                            conn.disconnect();
+                        }
                     }
 
                 }
@@ -313,14 +313,14 @@ public class LaunchHolder {
                 debugPrint = false;
 
                 // Write the session state information - can be future use by
-                // the dashboard 
-                sessionStatusHolder.dumpSessionStatus(false, sessionIdName, utils,launcher);
+                // the dashboard
+                sessionStatusHolder.dumpSessionStatus(false, sessionIdName, utils, launcher);
 
             }
 
         }
 
-        sessionStatusHolder.dumpSessionStatus(true, sessionIdName, utils,launcher);
+        sessionStatusHolder.dumpSessionStatus(true, sessionIdName, utils, launcher);
 
         // Check if to write the Unit Test XML
         if (stepHolder.getjUnitRequestHolder() != null) {
@@ -330,7 +330,7 @@ public class LaunchHolder {
                 // Fill in the Extra runs attribute map
                 apiURL = url + "/rest/$schema/response?action=list&component=runs&extended=true";
                 conn = utils.getVAPIConnection(apiURL, requireAuth, user, password, "GET", dynamicUserId, buildID, buildNumber, workPlacePath, listener, connConnTimeOut, connReadTimeout, advConfig);
-                BufferedReader brExtra = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                BufferedReader brExtra = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
                 StringBuilder resultExtra = new StringBuilder();
 
@@ -339,6 +339,7 @@ public class LaunchHolder {
                 while ((outputExtra = brExtra.readLine()) != null) {
                     resultExtra.append(outputExtra);
                 }
+                brExtra.close();
 
                 conn.disconnect();
 
@@ -346,9 +347,9 @@ public class LaunchHolder {
 
                 JSONObject responseItems = JSONObject.fromObject(tmp.getString("items"));
                 JSONObject properties = JSONObject.fromObject(responseItems.getString("properties"));
-                
+
                 List<String> extraItems = new ArrayList<String>();
-                if (stepHolder.getjUnitRequestHolder().getStaticAttributeList() != null){
+                if (stepHolder.getjUnitRequestHolder().getStaticAttributeList() != null) {
                     extraItems = Arrays.asList(stepHolder.getjUnitRequestHolder().getStaticAttributeList().split("\\s*,\\s*"));
                 }
                 Iterator<String> iterExtra = extraItems.iterator();
@@ -390,16 +391,17 @@ public class LaunchHolder {
                                 connReadTimeout, advConfig);
 
                         OutputStream os = conn.getOutputStream();
-                        os.write(runsJSONData.getBytes());
+                        os.write(runsJSONData.getBytes(StandardCharsets.UTF_8));
                         os.flush();
 
                         if (checkResponseCode(conn)) {
-                            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
                             StringBuilder result = new StringBuilder();
                             String output;
                             while ((output = br.readLine()) != null) {
                                 result.append(output);
                             }
+                            br.close();
 
                             JSONArray tmpRunsArray = JSONArray.fromObject(result.toString());
 
@@ -415,8 +417,9 @@ public class LaunchHolder {
                         }
                         e.printStackTrace();
                     } finally {
-                        conn.disconnect();
-
+                        if (conn != null) {
+                            conn.disconnect();
+                        }
                     }
                 }
                 if (entireSessionsRuns.size() > 0) {
@@ -433,15 +436,15 @@ public class LaunchHolder {
     }
 
     private boolean toContinue(String state, String sessionId, TaskListener listener) {
-        return checkWhatNext(state, sessionId, "continue",listener);
+        return checkWhatNext(state, sessionId, "continue", listener);
     }
 
     private boolean toFail(String state, String sessionId, TaskListener listener) {
-        return checkWhatNext(state, sessionId, "fail",listener);
+        return checkWhatNext(state, sessionId, "fail", listener);
     }
 
     private boolean toIgnore(String state, String sessionId, TaskListener listener) {
-        return checkWhatNext(state, sessionId, "ignore",listener);
+        return checkWhatNext(state, sessionId, "ignore", listener);
     }
 
     private boolean checkWhatNext(String state, String sessionId, String checkFor, TaskListener listener) {
@@ -449,37 +452,37 @@ public class LaunchHolder {
         if (("inaccessible").equals(state)) {
 
             if (stepHolder.getInaccessibleResolver().equals(checkFor)) {
-                return stepResolver(checkFor, sessionId,  listener);
+                return stepResolver(checkFor, sessionId, listener);
             }
 
         } else if (("stopped").equals(state)) {
 
             if (stepHolder.getStoppedResolver().equals(checkFor)) {
-                return stepResolver(checkFor, sessionId,  listener);
+                return stepResolver(checkFor, sessionId, listener);
             }
 
         } else if (("failed").equals(state)) {
 
             if (stepHolder.getFailedResolver().equals(checkFor)) {
-                return stepResolver(checkFor, sessionId,  listener);
+                return stepResolver(checkFor, sessionId, listener);
             }
 
         } else if (("done").equals(state)) {
 
             if (stepHolder.getDoneResolver().equals(checkFor)) {
-                return stepResolver(checkFor, sessionId,  listener);
+                return stepResolver(checkFor, sessionId, listener);
             }
 
         } else if (("suspended").equals(state)) {
 
             if (stepHolder.getSuspendedResolver().equals(checkFor)) {
-                return stepResolver(checkFor, sessionId,  listener);
+                return stepResolver(checkFor, sessionId, listener);
             }
 
         } else if (("completed").equals(state)) {
 
             if (checkFor.equals("continue")) {
-                return checkIfAllSessionsEnded(sessionId,  listener);
+                return checkIfAllSessionsEnded(sessionId, listener);
             }
         }
 
@@ -491,7 +494,7 @@ public class LaunchHolder {
 
         //Only if there's no rerun planned
         //listener.getLogger().print("Checking Session State for real completion - session id ("+ sessionId +"). Checking for completion (2nd check in a row): " + sessionFinalState.get(sessionId) + " \n");
-        if ("true".equals(sessionFinalState.get(sessionId))){
+        if ("true".equals(sessionFinalState.get(sessionId))) {
             listOfSessionsForCountDown.remove(sessionId);
         }
 
@@ -500,26 +503,26 @@ public class LaunchHolder {
         } else {
             return false;
         }
-        
+
 
     }
 
     private boolean stepResolver(String checkFor, String sessionId, TaskListener listener) {
         if (checkFor.equals("continue")) {
-            return checkIfAllSessionsEnded(sessionId,  listener);
+            return checkIfAllSessionsEnded(sessionId, listener);
         } else if (checkFor.equals("fail")) {
             return true;
         } else if (checkFor.equals("ignore")) {
             //return true;
-            return checkIfAllSessionsEnded(sessionId,  listener);
+            return checkIfAllSessionsEnded(sessionId, listener);
         }
 
         return false;
     }
-    
+
     /*
     private boolean checkIfAllRunsFinished(String sessionId, TaskListener listener){
-        //The ignore feature signals the build to keep waiting.  So far there was no stop condition.  The below also check to 
+        //The ignore feature signals the build to keep waiting.  So far there was no stop condition.  The below also check to
         //see that all runs from that build are not in running or waiting state, and once that stage is being accomplished, we will
         //exit this waiting state.
         if ("true".equals(sessionFinalState.get(sessionId))){
@@ -528,7 +531,7 @@ public class LaunchHolder {
             return false;
         }
         //listener.getLogger().print("Ignroing Session State for session id ("+ sessionId +"). Waiting until all session's runs will end...\n");
-                
+
     }
 */
 
@@ -549,7 +552,7 @@ public class LaunchHolder {
     }
 
     public void abortVManagerSessions(Logger logger, String url, boolean requireAuth, String user, String password, TaskListener listener, boolean dynamicUserId, int buildNumber, String workPlacePath, String buildId,
-            int connConnTimeOut, int connReadTimeout, boolean advConfig, boolean notInTestMode, List<String> listOfSessions, String workingJobDir) throws Exception {
+                                      int connConnTimeOut, int connReadTimeout, boolean advConfig, boolean notInTestMode, List<String> listOfSessions, String workingJobDir) throws Exception {
 
         String postData = "{\"filter\":{\"@c\":\".InFilter\",\"attName\":\"id\",\"operand\":\"IN\",\"values\":[" + String.join(",", listOfSessions) + "]}}";
         String apiURL = url + "/rest/sessions/suspend";
@@ -557,7 +560,7 @@ public class LaunchHolder {
         HttpURLConnection conn = utils.getVAPIConnection(apiURL, requireAuth, user, password, "POST", dynamicUserId, buildId, buildNumber, workPlacePath, listener, connConnTimeOut, connReadTimeout, advConfig);
 
         OutputStream os = conn.getOutputStream();
-        os.write(postData.getBytes());
+        os.write(postData.getBytes(StandardCharsets.UTF_8));
         os.flush();
 
         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
@@ -589,12 +592,13 @@ public class LaunchHolder {
         try {
             resultFromError = new StringBuilder(conn.getResponseMessage());
             responseCode = conn.getResponseCode();
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
             String output;
             while ((output = br.readLine()) != null) {
                 resultFromError.append(output);
             }
+            br.close();
         } catch (Exception e) {
 
         } finally {

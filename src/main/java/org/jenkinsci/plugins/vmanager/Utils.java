@@ -150,7 +150,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         Iterator<String> iter = listOfNames.iterator();
@@ -177,7 +179,9 @@ public class Utils {
             }
             try {
                 File fileToDelete = new File(fileName);
-                fileToDelete.renameTo(new File(fileToDelete + ".delete"));
+                if (!fileToDelete.renameTo(new File(fileToDelete + ".delete"))) {
+                    throw new IOException("Failed to rename file: " + fileName);
+                }
             } catch (Exception e) {
                 if (notInTestMode) {
                     listener.getLogger().print("Failed to delete input file from workspace.  Failed to delete file '" + fileName + "'\n");
@@ -229,7 +233,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         if (deleteInputFile) {
@@ -238,7 +244,9 @@ public class Utils {
             }
             try {
                 File fileToDelete = new File(fileName);
-                fileToDelete.renameTo(new File(fileToDelete + ".delete"));
+                if (!fileToDelete.renameTo(new File(fileToDelete + ".delete"))) {
+                    throw new IOException("Failed to rename file: " + fileName);
+                }
             } catch (Exception e) {
                 if (notInTestMode) {
                     listener.getLogger().print("Failed to delete input file from workspace.  Failed to delete file '" + fileName + "'\n");
@@ -290,7 +298,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         Iterator<String> iter = listOfNames.iterator();
@@ -309,7 +319,9 @@ public class Utils {
             }
             try {
                 File fileToDelete = new File(fileName);
-                fileToDelete.delete();
+                if (!fileToDelete.delete()) {
+                    throw new IOException("Failed to delete file: " + fileName);
+                }
             } catch (Exception e) {
                 if (notInTestMode) {
                     listener.getLogger().print("Failed to delete input file from workspace.  Failed to delete file '" + fileName + "'\n");
@@ -365,7 +377,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         return output;
@@ -447,7 +461,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         return output;
@@ -503,7 +519,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         return output;
@@ -640,7 +658,9 @@ public class Utils {
 
             throw e;
         } finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         output = listOfNames.toString();
@@ -656,7 +676,9 @@ public class Utils {
             }
             try {
                 File fileToDelete = new File(fileName);
-                fileToDelete.renameTo(new File(fileToDelete + ".delete"));
+                if (!fileToDelete.renameTo(new File(fileToDelete + ".delete"))) {
+                    throw new IOException("Failed to rename file: " + fileName);
+                }
             } catch (Exception e) {
                 if (notInTestMode) {
                     listener.getLogger().print("Failed to delete input file from workspace.  Failed to delete file '" + fileName + "'\n");
@@ -691,7 +713,7 @@ public class Utils {
                 throw new Exception("Failed to connect to host " + e.getMessage() + ".  Host is unknown.");
 
             }
-            os.write(input.getBytes());
+            os.write(input.getBytes(StandardCharsets.UTF_8));
             os.flush();
 
             if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -710,7 +732,7 @@ public class Utils {
                 return errorMessage;
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
             StringBuilder result = new StringBuilder();
             String output;
@@ -765,7 +787,7 @@ public class Utils {
                 return errorMessage;
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
             StringBuilder result = new StringBuilder();
 
@@ -883,15 +905,17 @@ public class Utils {
 
                     throw e;
                 } finally {
-                    reader.close();
+                    if (reader != null) {
+                        reader.close();
+                    }
                 }
             }
 
             String authString = user + ":" + password;
             UserUsedForLogin = user;
             PasswordUsedForLogin = password;
-            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-            String authStringEnc = new String(authEncBytes);
+            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes(StandardCharsets.UTF_8));
+            String authStringEnc = new String(authEncBytes, StandardCharsets.UTF_8);
             conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
             // ----------------------------------------------------------------------------------------
         }
@@ -908,7 +932,6 @@ public class Utils {
         }
 
         String apiURL = url + "/rest/sessions/launch";
-        String apiSessionURL = url + "/rest/sessions/list";
 
         List<String> listOfSessions = new ArrayList<String>();
 
@@ -967,7 +990,9 @@ public class Utils {
 
                                 throw e;
                             } finally {
-                                reader.close();
+                                if (reader != null) {
+                                    reader.close();
+                                }
                             }
                         }
                     } else if (!userPrivateSSHKey) {
@@ -992,7 +1017,7 @@ public class Utils {
                 //listener.getLogger().print("Verisium Manager vAPI input: '" + input + "' with user/password: "+ user + "/" + password +"\n");
                 HttpURLConnection conn = getVAPIConnection(apiURL, requireAuth, user, password, "POST", dynamicUserId, buildID, buildNumber, workPlacePath, listener, connConnTimeOut, connReadTimeout, advConfig);
                 OutputStream os = conn.getOutputStream();
-                os.write(input.getBytes());
+                os.write(input.getBytes(StandardCharsets.UTF_8));
                 os.flush();
 
                 if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
@@ -1015,7 +1040,7 @@ public class Utils {
                     return errorMessage;
                 }
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
                 StringBuilder result = new StringBuilder();
                 String output;
@@ -1091,7 +1116,7 @@ public class Utils {
 
             if ("PUT".equals(requestMethod) || "POST".equals(requestMethod)) {
                 OutputStream os = conn.getOutputStream();
-                os.write(input.getBytes());
+                os.write(input.getBytes(StandardCharsets.UTF_8));
                 os.flush();
             }
 
@@ -1123,7 +1148,7 @@ public class Utils {
                 return errorMessage;
             }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
             StringBuilder result = new StringBuilder();
             String output;
@@ -1205,10 +1230,11 @@ public class Utils {
         String errorMessage = "";
         StringBuilder resultFromError = null;
         int responseCode = 0;
+        BufferedReader br = null;
         try {
             resultFromError = new StringBuilder(conn.getResponseMessage());
             responseCode = conn.getResponseCode();
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
+            br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
             String output;
             while ((output = br.readLine()) != null) {
@@ -1217,6 +1243,13 @@ public class Utils {
         } catch (Exception e) {
 
         } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             errorMessage = "Failed : HTTP error code : " + responseCode + " (" + resultFromError + ")\n";
             if (notInTestMode) {
                 listener.getLogger().print(errorMessage);
@@ -1261,20 +1294,19 @@ public class Utils {
     }
 
     public void standardWriteToDisk(String fileOnDiskPath, String output) throws IOException {
-        FileWriter writer = new FileWriter(fileOnDiskPath);
+        FileWriter writer = new FileWriter(fileOnDiskPath, StandardCharsets.UTF_8);
         writer.append(output);
         writer.flush();
         writer.close();
     }
 
     public BufferedReader standardReadFromDisk(String fileOnDiskPath) throws FileNotFoundException {
-        return new BufferedReader(new FileReader(fileOnDiskPath));
+        return new BufferedReader(new FileReader(fileOnDiskPath, StandardCharsets.UTF_8));
     }
 
     public void moveFromNodeToMaster(String fileName, Launcher launcher, String content) throws IOException, InterruptedException {
 
         //Get master FilePath
-        String buildDir = build.getRootDir().getAbsolutePath();
         FilePath masterDirectory = new FilePath(build.getRootDir()).child(fileName);
         //this.jobListener.getLogger().print("About to copy " + fileName + " from Slave location to Master location: \n");
         //this.jobListener.getLogger().print("From Slave location: " + this.filePath.getRemote() + "\n");
@@ -1303,8 +1335,8 @@ public class Utils {
             Proc proc = launcher.launch(ps);
             
             
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getStdout()));
-            BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getStdout()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getStdout(), StandardCharsets.UTF_8));
+            BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getStdout(), StandardCharsets.UTF_8));
             String s = null;
 
             while ((s = in.readLine()) != null) {

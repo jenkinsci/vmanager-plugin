@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -137,29 +138,27 @@ public class ReportManager {
     private String getReportEmailAddresses() {
 
         String[] emails;
-        String output = null;
+        StringBuilder output = new StringBuilder();
 
         if ("static".equals(summaryReportParams.emailType)) {
             String[] values = summaryReportParams.emailList.split(",");
-            output = "";
             for (String email : values) {
-                output = output + "\"" + email.trim() + "\",";
+                output.append("\"").append(email.trim()).append("\",");
             }
             //Remove the last comma
             if (output.length() > 2) {
-                output = output.substring(0, output.length() - 1);
+                output.setLength(output.length() - 1);
             }
         } else {
             try {
                 emails = utils.loadDataFromInputFiles(vmgrRun.getRun().getId(), vmgrRun.getRun().getNumber(), "" + vmgrRun.getJobWorkingDir(), summaryReportParams.emailInputFile, listener, summaryReportParams.deleteEmailInputFile, "emails", "emails.input");
-                output = "";
                 for (String email : emails) {
-                    output = output + "\"" + email.trim() + "\",";
+                    output.append("\"").append(email.trim()).append("\",");
                 }
 
                 //Remove the last comma
                 if (output.length() > 2) {
-                    output = output.substring(0, output.length() - 1);
+                    output.setLength(output.length() - 1);
                 }
 
             } catch (Exception e) {
@@ -167,7 +166,7 @@ public class ReportManager {
             }
         }
 
-        return output;
+        return output.toString();
 
     }
 
@@ -446,13 +445,11 @@ public class ReportManager {
         int buildNumber = 20;
         String buildId = "20";
         String jobWorkingDir = "c://temp";
-        String jobRootDir = "c://temp";
 
         if (!this.testMode) {
             buildNumber = vmgrRun.getRun().getNumber();
             buildId = vmgrRun.getRun().getId();
             jobWorkingDir = vmgrRun.getJobWorkingDir();
-            jobRootDir = build.getRootDir().getAbsolutePath();
         }
 
         //Fix for SECURITY-1615 - Use Apache dedicated instead
@@ -492,12 +489,14 @@ public class ReportManager {
                     }
                     throw e;
                 } finally {
-                    reader.close();
+                    if (reader != null) {
+                        reader.close();
+                    }
                 }
             }
 
             String userpass = username + ":" + vAPIConnectionParam.vAPIPassword;
-            String basicAuth = "Basic " + java.util.Base64.getUrlEncoder().encodeToString(userpass.getBytes());
+            String basicAuth = "Basic " + java.util.Base64.getUrlEncoder().encodeToString(userpass.getBytes(StandardCharsets.UTF_8));
             httpGet.setHeader("Authorization", basicAuth);
         }
 
@@ -510,7 +509,7 @@ public class ReportManager {
                 entity.writeTo(outputStream);
                 EntityUtils.consume(entity);
 
-                String output = outputStream.toString();
+                String output = outputStream.toString(StandardCharsets.UTF_8);
                 int start = output.indexOf("<head>");
                 int end = output.indexOf("</head>") + 7;
                 output = output.substring(0, start) + output.substring(end, output.length());
@@ -531,18 +530,16 @@ public class ReportManager {
                 output = output.replace("</html>", "");
                 output = output.replace("<body>", "");
                 output = output.replace("</body>", "");
-
-                String fileOutput = /*jobWorkingDir + File.separator +*/ buildNumber + "." + buildId + ".summary.report";
+                
+                String fileOutput = buildNumber + "." + buildId + ".summary.report";
                 if (utils.getFilePath() == null){
                     //Pipeline always run on master
                     fileOutput = jobWorkingDir + File.separator + fileOutput;            
                 }
                 StringBuffer writer = new StringBuffer();
                 writer.append(output);
-                //writer.flush();
 
                 utils.saveFileOnDisk(fileOutput, writer.toString());
-                //writer.close();
 
                 if (!this.testMode) {
                     listener.getLogger().println("Report Summary was created succesfully.");
@@ -571,17 +568,15 @@ public class ReportManager {
         int buildNumber = 20;
         String buildId = "20";
         String jobWorkingDir = "c://temp";
-        String jobRootDir = "c://temp";
 
         if (!this.testMode) {
             buildNumber = vmgrRun.getRun().getNumber();
             buildId = vmgrRun.getRun().getId();
             jobWorkingDir = vmgrRun.getJobWorkingDir();
-            jobRootDir = build.getRootDir().getAbsolutePath();
         }
 
         try {
-            conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobRootDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
+            conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobWorkingDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
             OutputStream os = conn.getOutputStream();
             String postData = buildPostParamForSummaryReport(false);
             if (!this.testMode) {
@@ -590,12 +585,12 @@ public class ReportManager {
                 System.out.println(postData);
             }
 
-            os.write(postData.getBytes());
+            os.write(postData.getBytes(StandardCharsets.UTF_8));
             os.flush();
 
             if (checkResponseCode(conn)) {
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
                 String fileOutput;
                 StringBuffer sb;
@@ -624,10 +619,10 @@ public class ReportManager {
                     }
                     fetchFromRemoteURL(sb.toString());
                 }
-
+                br.close();
             } else {
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
                 String output;
                 String fileOutput = buildNumber + "." + buildId + ".summary.report";
@@ -639,7 +634,7 @@ public class ReportManager {
                 writer.append("<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/support-icon.png\"></img></p><p>");
                 writer.append("Failure to retrieve the report from the Verisium Manager server for this build.  Check your parameters.<br>Below you can find the exception that was thrown during the retrieval process:<br><br><strong>");
                 while ((output = br.readLine()) != null) {
-                    writer.append(output + "<br>");
+                    writer.append(output).append("<br>");
                 }
 
                 if (conn.getResponseCode() == 500) {
@@ -654,7 +649,7 @@ public class ReportManager {
                 writer.append("</strong></p></div></div>");
                 utils.saveFileOnDisk(fileOutput, writer.toString());
                 utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report", launcher,writer.toString());
-
+                br.close();
             }
         } catch (Exception e) {
             if (this.testMode) {
@@ -680,14 +675,10 @@ public class ReportManager {
             throw e;
 
         } finally {
-            
-            conn.disconnect();
-
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-        
-        
-        
-
     }
     
     
@@ -710,17 +701,15 @@ public class ReportManager {
         int buildNumber = 20;
         String buildId = "20";
         String jobWorkingDir = "c://temp";
-        String jobRootDir = "c://temp";
 
         if (!this.testMode) {
             buildNumber = vmgrRun.getRun().getNumber();
             buildId = vmgrRun.getRun().getId();
             jobWorkingDir = vmgrRun.getJobWorkingDir();
-            jobRootDir = build.getRootDir().getAbsolutePath();
         }
 
         try {
-            conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobRootDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
+            conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobWorkingDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
 
             OutputStream os = conn.getOutputStream();
             String postData = buildPostParamForSummaryReport(true);
@@ -730,12 +719,12 @@ public class ReportManager {
                 System.out.println(postData);
             }
 
-            os.write(postData.getBytes());
+            os.write(postData.getBytes(StandardCharsets.UTF_8));
             os.flush();
 
             if (!checkResponseCode(conn)) {
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
                 String output;
                 StringBuffer sb = new StringBuffer();
@@ -746,6 +735,7 @@ public class ReportManager {
                 if (!this.testMode) {
                     listener.getLogger().println("Failed to send report using the Verisium Manager server.  Exception is:\n" + sb.toString());
                 }
+                br.close();
             } else {
                 if (!this.testMode) {
                     listener.getLogger().println("Report Summary email was sent succesfully.");
@@ -762,10 +752,10 @@ public class ReportManager {
             throw e;
 
         } finally {
-            conn.disconnect();
-
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-
     }
 
     public String getReportFromWorkspace() {
@@ -773,10 +763,7 @@ public class ReportManager {
         String fileInput = vmgrRun.getJobWorkingDir() + File.separator + vmgrRun.getRun().getNumber() + "." + vmgrRun.getRun().getId() + ".summary.report";
         String output = "<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/weblinks.png\"></img></p><p>Failed to find a report file for this build.<br>Please check that the following file exist:<br>" + fileInput + "</p></div></div>";
         try {
-                                                                                             
-            output = new String(Files.readAllBytes(Paths.get(fileInput)));
-            
-
+            output = new String(Files.readAllBytes(Paths.get(fileInput)), StandardCharsets.UTF_8);
         } catch (IOException ex) {
             System.out.println("Verisium Manager Action - Can't find file for loading report: " + fileInput);
             return output;
@@ -822,6 +809,3 @@ public class ReportManager {
     }
 
 }
-
-
-

@@ -27,8 +27,10 @@ package org.jenkinsci.plugins.vmanager;
  *
  * @author tyanai
  */
-public class VAPIConnectionParam {
+public class VAPIConnectionParam implements java.io.Serializable {
     
+    private static final long serialVersionUID = 1L;
+
     public String vAPIUrl;
     public boolean authRequired;
     public boolean advConfig;

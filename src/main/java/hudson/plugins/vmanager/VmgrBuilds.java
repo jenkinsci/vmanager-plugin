@@ -24,7 +24,6 @@ public class VmgrBuilds extends DashboardPortlet {
      * Number of latest builds which will be displayed on the screen
      */
     private int numBuilds = 10;
-    private boolean pipelineBuild = false;
 
     @DataBoundConstructor
     public VmgrBuilds(String name, int numBuilds) {

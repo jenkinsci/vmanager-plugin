@@ -83,8 +83,8 @@ public class InvokeExecutionTask extends  MasterToSlaveFileCallable<Void> implem
                     ProcessBuilder builder = new ProcessBuilder(command);
                     builder.redirectErrorStream(true);
                     Process proc = builder.start();
-                    BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-                    BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+                    BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
+                    BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getErrorStream(), StandardCharsets.UTF_8));
                     
                     String s = null;
 
@@ -113,6 +113,9 @@ public class InvokeExecutionTask extends  MasterToSlaveFileCallable<Void> implem
                         jobListener.getLogger().print(sError + "\n");
 
                     }
+
+                    in.close();
+                    inError.close();
 
                 } catch (IOException e) {
                     jobListener.getLogger().println(e.getMessage());
