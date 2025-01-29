@@ -18,6 +18,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -131,11 +132,11 @@ public class VMGRLaunch extends Builder {
     // "DataBoundConstructor"
     @DataBoundConstructor
     public VMGRLaunch(String vAPIUrl, String vAPIUser, String vAPIPassword, String vSIFName, String vSIFInputFile, String credentialInputFile, boolean deleteInputFile, boolean deleteCredentialInputFile, boolean useUserOnFarm, boolean authRequired, String vsifType, String userFarmType,
-            boolean dynamicUserId, boolean advConfig, int connTimeout, int readTimeout, boolean envVarible, String envVaribleFile, String inaccessibleResolver, String stoppedResolver, String failedResolver, String doneResolver, String suspendedResolver, boolean waitTillSessionEnds,
-            int stepSessionTimeout, boolean generateJUnitXML, boolean extraAttributesForFailures, String staticAttributeList, boolean markBuildAsFailedIfAllRunFailed, boolean failJobIfAllRunFailed, String envSourceInputFile, boolean vMGRBuildArchive, boolean deleteAlsoSessionDirectory,
-            boolean genericCredentialForSessionDelete, String archiveUser, String archivePassword, String famMode, String famModeLocation, boolean noAppendSeed, boolean markBuildAsPassedIfAllRunPassed, boolean failJobUnlessAllRunPassed, boolean userPrivateSSHKey, boolean attrValues,
-            String attrValuesFile, String executionType, String sessionsInputFile, boolean deleteSessionInputFile, String envVariableType, String envVariableText, String attrVariableType, String attrVariableText, boolean pauseSessionOnBuildInterruption, String envSourceInputFileType,
-            String executionScript, String executionShellLocation, String executionVsifFile, String defineVaribleFile, boolean defineVarible, String defineVariableType, String defineVariableText, String vAPICredentials, String credentialType) {
+                      boolean dynamicUserId, boolean advConfig, int connTimeout, int readTimeout, boolean envVarible, String envVaribleFile, String inaccessibleResolver, String stoppedResolver, String failedResolver, String doneResolver, String suspendedResolver, boolean waitTillSessionEnds,
+                      int stepSessionTimeout, boolean generateJUnitXML, boolean extraAttributesForFailures, String staticAttributeList, boolean markBuildAsFailedIfAllRunFailed, boolean failJobIfAllRunFailed, String envSourceInputFile, boolean vMGRBuildArchive, boolean deleteAlsoSessionDirectory,
+                      boolean genericCredentialForSessionDelete, String archiveUser, String archivePassword, String famMode, String famModeLocation, boolean noAppendSeed, boolean markBuildAsPassedIfAllRunPassed, boolean failJobUnlessAllRunPassed, boolean userPrivateSSHKey, boolean attrValues,
+                      String attrValuesFile, String executionType, String sessionsInputFile, boolean deleteSessionInputFile, String envVariableType, String envVariableText, String attrVariableType, String attrVariableText, boolean pauseSessionOnBuildInterruption, String envSourceInputFileType,
+                      String executionScript, String executionShellLocation, String executionVsifFile, String defineVaribleFile, boolean defineVarible, String defineVariableType, String defineVariableText, String vAPICredentials, String credentialType) {
         this.vAPIUrl = vAPIUrl;
         this.vAPIUser = vAPIUser;
         this.vAPIPassword = vAPIPassword;
@@ -214,7 +215,8 @@ public class VMGRLaunch extends Builder {
      * We'll use this from the
      * <p>
      * config.jelly</p>.
-     * @return 
+     *
+     * @return
      */
     public String getExecutionVsifFile() {
         return executionVsifFile;
@@ -469,7 +471,7 @@ public class VMGRLaunch extends Builder {
 
         String workingJobDir = build.getRootDir().getAbsolutePath();
         listener.getLogger().println("Root dir is: " + workingJobDir);
-        
+
         String macroVAPIUrl = vAPIUrl;
         try {
             macroVAPIUrl = TokenMacro.expandAll(build, listener, vAPIUrl);
@@ -477,7 +479,7 @@ public class VMGRLaunch extends Builder {
             e.printStackTrace();
             listener.getLogger().println("Failed to extract out macro from the input of vAPIUrl: " + vAPIUrl);
         }
-        
+
         listener.getLogger().println("The HOST for vAPI is: " + macroVAPIUrl);
         listener.getLogger().println("The user/password type for vAPI is: " + credentialType);
         String tempUser = vAPIUser;
@@ -485,9 +487,14 @@ public class VMGRLaunch extends Builder {
         if ("credential".equals(credentialType)) {
             //overwrite the plain text with the credentials
             StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(this.vAPICredentials, StandardUsernamePasswordCredentials.class, build, Collections.<DomainRequirement>emptyList());
-            tempUser = c.getUsername();
-            tempPassword = c.getPassword().getPlainText();
-            listener.getLogger().println("Credentials set with ID " + this.vAPICredentials);
+            if (c != null) {
+                tempUser = c.getUsername();
+                tempPassword = c.getPassword().getPlainText();
+                listener.getLogger().println("Credentials set with ID " + this.vAPICredentials);
+            } else {
+                listener.getLogger().println("Failed to find credentials with ID " + this.vAPICredentials);
+                return false;
+            }
         }
         listener.getLogger().println("The vAPIUser for vAPI is: " + tempUser);
         listener.getLogger().println("The vAPIPassword for vAPI is: *******");
@@ -915,9 +922,9 @@ public class VMGRLaunch extends Builder {
         /**
          * To persist global configuration information, simply store it in a
          * field and call save().
-         *
-         *
-         *
+         * <p>
+         * <p>
+         * <p>
          * /**
          * In order to load the persisted global configuration, you have to call
          * load() in the constructor.
@@ -930,7 +937,7 @@ public class VMGRLaunch extends Builder {
          * Performs on-the-fly validation of the form field 'name'.
          *
          * @param value This parameter receives the value that the user has
-         * typed.
+         *              typed.
          * @return Indicates the outcome of the validation. This is sent to the
          * browser.
          * <p>
@@ -1076,8 +1083,8 @@ public class VMGRLaunch extends Builder {
         }
 
         public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
-                @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
+                                               @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
+                                               @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
                 throws IOException, ServletException {
             try {
                 String tempUser = vAPIUser;
@@ -1122,7 +1129,7 @@ public class VMGRLaunch extends Builder {
         }
 
         public FormValidation doTestArchiveUser(@QueryParameter("archiveUser") final String archiveUser, @QueryParameter("archivePassword") final String archivePassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl) throws IOException,
+                                                @QueryParameter("vAPIUrl") final String vAPIUrl) throws IOException,
                 ServletException {
             try {
 
@@ -1139,7 +1146,7 @@ public class VMGRLaunch extends Builder {
         }
 
         public FormValidation doTestExtraStaticAttr(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList) throws IOException,
+                                                    @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList) throws IOException,
                 ServletException {
             try {
 

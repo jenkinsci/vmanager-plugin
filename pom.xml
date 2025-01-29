@@ -38,7 +38,7 @@
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/vmanager-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/vmanager-plugin.git</developerConnection>
-    <url>http://github.com/jenkinsci/vmanager-plugin</url>
+    <url>https://github.com/jenkinsci/vmanager-plugin</url>
     <tag>vmanager-plugin-3.1.9</tag>
   </scm>
   <dependencyManagement>

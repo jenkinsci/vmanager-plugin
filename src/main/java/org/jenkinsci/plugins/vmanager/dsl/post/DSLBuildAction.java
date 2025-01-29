@@ -5,6 +5,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.plugins.vmanager.BuildStatusMap;
 import java.io.File;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -18,6 +19,8 @@ import org.jenkinsci.plugins.vmanager.VMGRRun;
 
 
 public class DSLBuildAction extends PostActionBase implements Serializable, RunAction2,  SimpleBuildStep.LastBuildAction  {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private String message;
     private transient Run<?, ?> build;

@@ -6,6 +6,9 @@ import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import java.io.File;
+import java.io.Serial;
+import java.io.Serializable;
+
 import org.jenkinsci.plugins.vmanager.JUnitRequestHolder;
 import org.jenkinsci.plugins.vmanager.StepHolder;
 import org.jenkinsci.plugins.vmanager.Utils;
@@ -13,7 +16,9 @@ import org.jenkinsci.plugins.vmanager.VMGRBuildArchiver;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
-public class VMGRLaunchStepImpl extends SynchronousNonBlockingStepExecution {
+public class VMGRLaunchStepImpl extends SynchronousNonBlockingStepExecution implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private transient final VMGRLaunchStep step;
 

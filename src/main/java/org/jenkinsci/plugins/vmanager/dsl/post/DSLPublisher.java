@@ -24,6 +24,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
@@ -39,6 +41,8 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private transient Run<?, ?> build;
 
@@ -88,7 +92,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
     private String vAPICredentials;
 
     VAPIConnectionParam vAPIConnectionParam;
-    SummaryReportParams summaryReportParams;
+    private transient SummaryReportParams summaryReportParams;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
@@ -356,6 +360,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
             if ("credential".equals(credentialType)) {
                 //overwrite the plain text with the credentials
                 StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(this.vAPICredentials, StandardUsernamePasswordCredentials.class, run, Collections.<DomainRequirement>emptyList());
+                assert c != null;
                 vAPIConnectionParam.vAPIUser = c.getUsername();
                 vAPIConnectionParam.vAPIPassword = c.getPassword().getPlainText();
             }

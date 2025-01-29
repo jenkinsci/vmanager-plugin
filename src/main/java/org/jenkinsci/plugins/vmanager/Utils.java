@@ -23,10 +23,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.StringTokenizer;
+
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.Proc;
+
 import java.io.FileNotFoundException;
 
 import javax.net.ssl.*;
@@ -468,7 +470,7 @@ public class Utils {
 
         return output;
     }
-    
+
     public String loadJSONDefineInput(String buildID, int buildNumber, String workPlacePath, String envInputFile, TaskListener listener) throws Exception {
         String output = null;
         StringBuffer listOfDefineValues = new StringBuffer();
@@ -526,7 +528,7 @@ public class Utils {
 
         return output;
     }
-    
+
     public String loadJSONAttrValuesFromTextArea(String buildID, int buildNumber, String workPlacePath, TaskListener listener, String textarea) throws Exception {
         String output = null;
         StringBuffer listOfAttrValues = new StringBuffer();
@@ -845,7 +847,7 @@ public class Utils {
     }
 
     public HttpURLConnection getVAPIConnection(String apiUrl, boolean requireAuth, String user, String password, String requestMethod, boolean dynamicUserId, String buildID, int buildNumber, String workPlacePath,
-            TaskListener listener, int connConnTimeOut, int connReadTimeout, boolean advConfig) throws Exception {
+                                               TaskListener listener, int connConnTimeOut, int connReadTimeout, boolean advConfig) throws Exception {
 
         boolean notInTestMode = true;
         if (listener == null) {
@@ -924,7 +926,7 @@ public class Utils {
     }
 
     public String executeVSIFLaunch(String[] vsifs, String url, boolean requireAuth, String user, String password, TaskListener listener, boolean dynamicUserId, String buildID, int buildNumber,
-            String workPlacePath, int connConnTimeOut, int connReadTimeout, boolean advConfig, String jsonEnvInput, boolean useUserOnFarm, String userFarmType, String[] farmUserPassword, StepHolder stepHolder, String envSourceInputFile, String workingJobDir, VMGRBuildArchiver vMGRBuildArchiver, boolean userPrivateSSHKey, String jsonAttrValuesInput, String executionType, String[] sessionNames, String envSourceInputFileType, Launcher launcher, String jsonDefineInput) throws Exception {
+                                    String workPlacePath, int connConnTimeOut, int connReadTimeout, boolean advConfig, String jsonEnvInput, boolean useUserOnFarm, String userFarmType, String[] farmUserPassword, StepHolder stepHolder, String envSourceInputFile, String workingJobDir, VMGRBuildArchiver vMGRBuildArchiver, boolean userPrivateSSHKey, String jsonAttrValuesInput, String executionType, String[] sessionNames, String envSourceInputFileType, Launcher launcher, String jsonDefineInput) throws Exception {
 
         boolean notInTestMode = true;
         if (listener == null) {
@@ -996,8 +998,10 @@ public class Utils {
                             }
                         }
                     } else if (!userPrivateSSHKey) {
-                        userFarm = farmUserPassword[0];;
-                        passwordFarm = farmUserPassword[1];;
+                        userFarm = farmUserPassword[0];
+                        ;
+                        passwordFarm = farmUserPassword[1];
+                        ;
                     }
 
                     if (!userPrivateSSHKey) {
@@ -1097,7 +1101,7 @@ public class Utils {
     }
 
     public String executeAPI(String jSON, String apiUrl, String url, boolean requireAuth, String user, String password, String requestMethod, TaskListener listener, boolean dynamicUserId, String buildID, int buildNumber,
-            String workPlacePath, int connConnTimeOut, int connReadTimeout, boolean advConfig) throws Exception {
+                             String workPlacePath, int connConnTimeOut, int connReadTimeout, boolean advConfig) throws Exception {
 
         try {
 
@@ -1184,7 +1188,7 @@ public class Utils {
     }
 
     public void waitTillSessionEnds(String url, boolean requireAuth, String user, String password, TaskListener listener, boolean dynamicUserId, String buildID, int buildNumber,
-            String workPlacePath, int connConnTimeOut, int connReadTimeout, boolean advConfig, StepHolder stepHolder, List listOfSessions, boolean notInTestMode, String workingJobDir, Launcher launcher) throws Exception {
+                                    String workPlacePath, int connConnTimeOut, int connReadTimeout, boolean advConfig, StepHolder stepHolder, List listOfSessions, boolean notInTestMode, String workingJobDir, Launcher launcher) throws Exception {
 
         LaunchHolder launchHolder = new LaunchHolder(stepHolder, listOfSessions, this);
         launchHolder.performWaiting(url, requireAuth, user, password, listener, dynamicUserId, buildID, buildNumber,
@@ -1294,14 +1298,27 @@ public class Utils {
     }
 
     public void standardWriteToDisk(String fileOnDiskPath, String output) throws IOException {
-        FileWriter writer = new FileWriter(fileOnDiskPath, StandardCharsets.UTF_8);
-        writer.append(output);
-        writer.flush();
-        writer.close();
+        try (FileWriter writer = new FileWriter(fileOnDiskPath, StandardCharsets.UTF_8)) {
+            writer.append(output);
+            writer.flush();
+        }
     }
 
     public BufferedReader standardReadFromDisk(String fileOnDiskPath) throws FileNotFoundException {
-        return new BufferedReader(new FileReader(fileOnDiskPath, StandardCharsets.UTF_8));
+        try {
+            if (filePath != null) {
+                hudson.FilePath newFile = filePath.child(fileOnDiskPath);
+                return new BufferedReader(new InputStreamReader(newFile.read(), StandardCharsets.UTF_8));
+            } else {
+                return new BufferedReader(new FileReader(fileOnDiskPath, StandardCharsets.UTF_8));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new FileNotFoundException("File not found: " + fileOnDiskPath);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     public void moveFromNodeToMaster(String fileName, Launcher launcher, String content) throws IOException, InterruptedException {
@@ -1325,44 +1342,39 @@ public class Utils {
         jobListener.getLogger().print("Select vsif for this execution is " + executionVsifFile + "\n");
         boolean foundGoodVSIF = false;
 
+        Proc proc = null;
+        BufferedReader in = null;
+        BufferedReader inError = null;
+
         try {
             Launcher.ProcStarter ps = launcher.new ProcStarter();
-        
-            ps.cmds(command);//.readStdout();
-
+            ps.cmds(command);
             ps.readStdout();
             ps.readStderr();
-            Proc proc = launcher.launch(ps);
-            
-            
-            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getStdout(), StandardCharsets.UTF_8));
-            BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getStdout(), StandardCharsets.UTF_8));
-            String s = null;
+            proc = launcher.launch(ps);
+
+            in = new BufferedReader(new InputStreamReader(proc.getStdout(), StandardCharsets.UTF_8));
+            inError = new BufferedReader(new InputStreamReader(proc.getStderr(), StandardCharsets.UTF_8));
+            String s;
 
             while ((s = in.readLine()) != null) {
-
                 jobListener.getLogger().print(s + "\n");
                 if (s.indexOf("*I,runner.sessionStarted: Session") > -1) {
                     foundGoodVSIF = true;
                     sessionNameToMonitor = s.substring(34, s.indexOf(" started."));
 
-                    //Now creates the file of sessions.input
+                    // Now creates the file of sessions.input
                     String fileOutput = buildNumber + "." + buildId + ".sessions.input";
                     StringBuffer writer = new StringBuffer();
                     writer.append(sessionNameToMonitor);
                     hudson.FilePath newFile = filePath.child(fileOutput);
                     newFile.write(writer.toString(), StandardCharsets.UTF_8.name());
-
                 }
-
             }
 
-            String sError = null;
-
+            String sError;
             while ((sError = inError.readLine()) != null) {
-
                 jobListener.getLogger().print(sError + "\n");
-
             }
 
         } catch (IOException e) {
@@ -1370,21 +1382,34 @@ public class Utils {
             for (StackTraceElement ste : e.getStackTrace()) {
                 jobListener.getLogger().println(" " + ste);
             }
-
             jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(e));
         } catch (InterruptedException ex) {
             jobListener.getLogger().println(ex.getMessage());
             for (StackTraceElement ste : ex.getStackTrace()) {
                 jobListener.getLogger().println(" " + ste);
             }
-
             jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(ex));
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (inError != null) {
+                try {
+                    inError.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         if (foundGoodVSIF) {
             jobListener.getLogger().print("Found session name to monitor: " + sessionNameToMonitor + "\n");
         } else {
-            throw new IOException("Failed to launch vsif using batch.  Job stopped.");
+            throw new IOException("Failed to launch vsif using batch. Job stopped.");
         }
     }
 
