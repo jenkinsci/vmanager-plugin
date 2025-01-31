@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 
 import net.sf.json.JSONObject;
@@ -36,7 +36,7 @@ import org.kohsuke.stapler.AncestorInPath;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class VMGRLaunch extends Builder {
 
@@ -940,7 +940,7 @@ public class VMGRLaunch extends Builder {
          * prevent the form from being saved. It just means that a message will
          * be displayed to the user.
          * @throws java.io.IOException
-         * @throws javax.servlet.ServletException
+         * @throws jakarta.servlet.ServletException
          */
         public FormValidation doCheckVAPIUrl(@QueryParameter String value) throws IOException, ServletException {
             if (value.length() == 0) {
@@ -1072,7 +1072,7 @@ public class VMGRLaunch extends Builder {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(StaplerRequest2 req, JSONObject formData) throws FormException {
 
             save();
             return super.configure(req, formData);

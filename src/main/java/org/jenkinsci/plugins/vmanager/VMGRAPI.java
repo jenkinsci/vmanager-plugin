@@ -11,13 +11,13 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class VMGRAPI extends Builder {
 
@@ -245,7 +245,7 @@ public class VMGRAPI extends Builder {
 		 *         not prevent the form from being saved. It just means that a
 		 *         message will be displayed to the user.
                  * @throws java.io.IOException
-                 * @throws javax.servlet.ServletException
+                 * @throws jakarta.servlet.ServletException
 		 */
 		public FormValidation doCheckVAPIUrl(@QueryParameter String value) throws IOException, ServletException {
 			if (value.length() == 0)
@@ -297,7 +297,7 @@ public class VMGRAPI extends Builder {
 		}
 
 		@Override
-		public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+		public boolean configure(StaplerRequest2 req, JSONObject formData) throws FormException {
 			
 			save();
 			return super.configure(req, formData);
