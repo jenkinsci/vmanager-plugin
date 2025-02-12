@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.vmanager;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
@@ -29,6 +30,9 @@ public class Utils {
     private TaskListener jobListener = null;
     private Run build = null;
 
+    @SuppressFBWarnings(
+            value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+            justification = "Workspace is checked for null and handled appropriately.")
     public Utils(Run run, TaskListener listener) {
         if (run.getExecutor() != null) {
             filePath = run.getExecutor().getCurrentWorkspace();
@@ -113,7 +117,7 @@ public class Utils {
             String fileEnding)
             throws Exception {
         String[] output = null;
-        List<String> listOfNames = new LinkedList<String>();
+        List<String> listOfNames = new LinkedList<>();
         BufferedReader reader = null;
         String fileName = null;
         boolean notInTestMode = true;
@@ -127,32 +131,27 @@ public class Utils {
 
         // Set the right File name.
         if ("".equals(inputFile) || inputFile == null) {
-            fileName = /*workPlacePath + File.separator + */ buildNumber + "." + buildID + "." + fileEnding;
+            fileName = buildNumber + "." + buildID + "." + fileEnding;
         } else {
             fileName = inputFile;
         }
 
         try {
-
             reader = this.loadFileFromWorkSpace(
                     buildID, buildNumber, workPlacePath, inputFile, listener, deleteInputFile, fileEnding);
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 listOfNames.add(line);
             }
-
         } catch (Exception e) {
-
             if (notInTestMode) {
                 listener.getLogger()
                         .print("Failed to read input file for the " + type + " targets.  Failed to load file '"
                                 + fileName + "'\n");
             } else {
-
                 System.out.println("Failed to open the read file for the " + type + " targets.  Failed to load file '"
                         + fileName + "'");
             }
-
             throw e;
         } finally {
             if (reader != null) {
@@ -160,20 +159,18 @@ public class Utils {
             }
         }
 
-        Iterator<String> iter = listOfNames.iterator();
         output = new String[listOfNames.size()];
         int i = 0;
         if (notInTestMode) {
             listener.getLogger().print("Found the following " + type + " files for Verisium Manager plugin:\n");
         }
-        String theFileName = null;
-        while (iter.hasNext()) {
-            theFileName = new String(iter.next());
+        String theFileName;
+        for (String name : listOfNames) {
+            theFileName = name;
             output[i++] = theFileName;
             if (notInTestMode) {
                 listener.getLogger().print(i + " '" + theFileName + "'\n");
             } else {
-
                 System.out.println(i + " '" + theFileName + "'");
             }
         }
@@ -192,9 +189,7 @@ public class Utils {
                     listener.getLogger()
                             .print("Failed to delete input file from workspace.  Failed to delete file '" + fileName
                                     + "'\n");
-
                 } else {
-
                     System.out.println("Failed to delete the input file from the workspace.  Failed to delete file '"
                             + fileName + "'");
                 }
@@ -293,7 +288,7 @@ public class Utils {
             boolean deleteInputFile)
             throws Exception {
         String[] output = null;
-        List<String> listOfNames = new LinkedList<String>();
+        List<String> listOfNames = new LinkedList<>();
         BufferedReader reader = null;
         String fileName = null;
         boolean notInTestMode = true;
@@ -303,13 +298,12 @@ public class Utils {
 
         // Set the right File name.
         if ("".equals(credentialInputFile) || credentialInputFile == null) {
-            fileName = /*workPlacePath + File.separator + */ buildNumber + "." + buildID + "." + "credential.input";
+            fileName = buildNumber + "." + buildID + "." + "credential.input";
         } else {
             fileName = credentialInputFile;
         }
 
         try {
-
             reader = this.loadFileFromWorkSpace(
                     buildID,
                     buildNumber,
@@ -318,23 +312,19 @@ public class Utils {
                     listener,
                     deleteInputFile,
                     "credential.input");
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null) {
                 listOfNames.add(line);
             }
-
         } catch (Exception e) {
-
             if (notInTestMode) {
                 listener.getLogger()
                         .print("Failed to read input file for the credentials.  Failed to load file '" + fileName
                                 + "'\n");
             } else {
-
                 System.out.println(
                         "Failed to open the read file for the credentials.  Failed to load file '" + fileName + "'");
             }
-
             throw e;
         } finally {
             if (reader != null) {
@@ -342,14 +332,10 @@ public class Utils {
             }
         }
 
-        Iterator<String> iter = listOfNames.iterator();
         output = new String[listOfNames.size()];
         int i = 0;
-
-        String stringValue = null;
-        while (iter.hasNext()) {
-            stringValue = new String(iter.next());
-            output[i++] = stringValue;
+        for (String name : listOfNames) {
+            output[i++] = name;
         }
 
         if (deleteInputFile) {
@@ -366,9 +352,7 @@ public class Utils {
                     listener.getLogger()
                             .print("Failed to delete input file from workspace.  Failed to delete file '" + fileName
                                     + "'\n");
-
                 } else {
-
                     System.out.println("Failed to delete the input file from the workspace.  Failed to delete file '"
                             + fileName + "'");
                 }
@@ -1615,28 +1599,32 @@ public class Utils {
             }
             String s;
 
-            while ((s = in.readLine()) != null) {
-                jobListener.getLogger().print(s + "\n");
-                if (s.indexOf("*I,runner.sessionStarted: Session") > -1) {
-                    foundGoodVSIF = true;
-                    sessionNameToMonitor = s.substring(34, s.indexOf(" started."));
+            if (in != null) {
+                while ((s = in.readLine()) != null) {
+                    jobListener.getLogger().print(s + "\n");
+                    if (s.indexOf("*I,runner.sessionStarted: Session") > -1) {
+                        foundGoodVSIF = true;
+                        sessionNameToMonitor = s.substring(34, s.indexOf(" started."));
 
-                    // Now creates the file of sessions.input
-                    String fileOutput = buildNumber + "." + buildId + ".sessions.input";
-                    StringBuffer writer = new StringBuffer();
-                    writer.append(sessionNameToMonitor);
-                    hudson.FilePath newFile = filePath.child(fileOutput);
-                    if (newFile != null) {
-                        newFile.write(writer.toString(), StandardCharsets.UTF_8.name());
-                    } else {
-                        throw new IOException("Failed to create file: " + fileOutput);
+                        // Now creates the file of sessions.input
+                        String fileOutput = buildNumber + "." + buildId + ".sessions.input";
+                        StringBuffer writer = new StringBuffer();
+                        writer.append(sessionNameToMonitor);
+                        hudson.FilePath newFile = filePath.child(fileOutput);
+                        if (newFile != null) {
+                            newFile.write(writer.toString(), StandardCharsets.UTF_8.name());
+                        } else {
+                            throw new IOException("Failed to create file: " + fileOutput);
+                        }
                     }
                 }
             }
 
             String sError;
-            while ((sError = inError.readLine()) != null) {
-                jobListener.getLogger().print(sError + "\n");
+            if (inError != null) {
+                while ((sError = inError.readLine()) != null) {
+                    jobListener.getLogger().print(sError + "\n");
+                }
             }
 
         } catch (IOException e) {
