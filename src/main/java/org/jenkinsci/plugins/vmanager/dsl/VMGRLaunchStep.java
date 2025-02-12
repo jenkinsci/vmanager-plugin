@@ -12,21 +12,20 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import jakarta.servlet.ServletException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.vmanager.Utils;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -102,9 +101,15 @@ public class VMGRLaunchStep extends Step {
     private String defineVariableType;
     private String defineVariableText;
 
-    
     @DataBoundConstructor
-    public VMGRLaunchStep(String vAPIUrl, String vAPIUser, String vAPIPassword, String executionType, boolean vMGRBuildArchive, String vSIFName, String vSIFInputFile) {
+    public VMGRLaunchStep(
+            String vAPIUrl,
+            String vAPIUser,
+            String vAPIPassword,
+            String executionType,
+            boolean vMGRBuildArchive,
+            String vSIFName,
+            String vSIFInputFile) {
 
         this.vAPIUrl = vAPIUrl;
         this.vAPIUser = vAPIUser;
@@ -113,16 +118,68 @@ public class VMGRLaunchStep extends Step {
         this.vMGRBuildArchive = vMGRBuildArchive;
         this.vSIFName = vSIFName;
         this.vSIFInputFile = vSIFInputFile;
-
     }
 
-    
     @Deprecated
-    public VMGRLaunchStep(String vAPIUrl, String vAPIUser, String vAPIPassword, String vSIFName, String vSIFInputFile, String credentialInputFile, boolean deleteInputFile, boolean deleteCredentialInputFile, boolean useUserOnFarm, boolean authRequired, String vsifType, String userFarmType,
-            boolean dynamicUserId, boolean advConfig, int connTimeout, int readTimeout, boolean envVarible, String envVaribleFile, String inaccessibleResolver, String stoppedResolver, String failedResolver, String doneResolver, String suspendedResolver, boolean waitTillSessionEnds, int stepSessionTimeout,
-            boolean generateJUnitXML, boolean extraAttributesForFailures, String staticAttributeList, boolean markBuildAsFailedIfAllRunFailed, boolean failJobIfAllRunFailed, String envSourceInputFile, boolean vMGRBuildArchive, boolean deleteAlsoSessionDirectory, boolean genericCredentialForSessionDelete,
-            String archiveUser, String archivePassword, String famMode, String famModeLocation, boolean noAppendSeed, boolean pipelineNodes, String masterWorkspaceLocation, boolean markBuildAsPassedIfAllRunPassed, boolean failJobUnlessAllRunPassed, boolean userPrivateSSHKey, boolean attrValues,
-            String attrValuesFile, String executionType, String sessionsInputFile, boolean deleteSessionInputFile, boolean pauseSessionOnBuildInterruption, String envSourceInputFileType, String executionScript, String executionShellLocation, String executionVsifFile, String defineVaribleFile, boolean defineVarible, String defineVariableType, String defineVariableText) {
+    public VMGRLaunchStep(
+            String vAPIUrl,
+            String vAPIUser,
+            String vAPIPassword,
+            String vSIFName,
+            String vSIFInputFile,
+            String credentialInputFile,
+            boolean deleteInputFile,
+            boolean deleteCredentialInputFile,
+            boolean useUserOnFarm,
+            boolean authRequired,
+            String vsifType,
+            String userFarmType,
+            boolean dynamicUserId,
+            boolean advConfig,
+            int connTimeout,
+            int readTimeout,
+            boolean envVarible,
+            String envVaribleFile,
+            String inaccessibleResolver,
+            String stoppedResolver,
+            String failedResolver,
+            String doneResolver,
+            String suspendedResolver,
+            boolean waitTillSessionEnds,
+            int stepSessionTimeout,
+            boolean generateJUnitXML,
+            boolean extraAttributesForFailures,
+            String staticAttributeList,
+            boolean markBuildAsFailedIfAllRunFailed,
+            boolean failJobIfAllRunFailed,
+            String envSourceInputFile,
+            boolean vMGRBuildArchive,
+            boolean deleteAlsoSessionDirectory,
+            boolean genericCredentialForSessionDelete,
+            String archiveUser,
+            String archivePassword,
+            String famMode,
+            String famModeLocation,
+            boolean noAppendSeed,
+            boolean pipelineNodes,
+            String masterWorkspaceLocation,
+            boolean markBuildAsPassedIfAllRunPassed,
+            boolean failJobUnlessAllRunPassed,
+            boolean userPrivateSSHKey,
+            boolean attrValues,
+            String attrValuesFile,
+            String executionType,
+            String sessionsInputFile,
+            boolean deleteSessionInputFile,
+            boolean pauseSessionOnBuildInterruption,
+            String envSourceInputFileType,
+            String executionScript,
+            String executionShellLocation,
+            String executionVsifFile,
+            String defineVaribleFile,
+            boolean defineVarible,
+            String defineVariableType,
+            String defineVariableText) {
         this.vAPIUrl = vAPIUrl;
         this.vAPIUser = vAPIUser;
         this.vAPIPassword = vAPIPassword;
@@ -197,6 +254,7 @@ public class VMGRLaunchStep extends Step {
      * We'll use this from the
      * <p>
      * config.jelly</p>.
+     *
      * @param connTimeout
      */
     @DataBoundSetter
@@ -379,7 +437,6 @@ public class VMGRLaunchStep extends Step {
         this.extraAttributesForFailures = extraAttributesForFailures;
     }
 
-
     @DataBoundSetter
     public void setCredentialInputFile(@CheckForNull String credentialInputFile) {
         this.credentialInputFile = Util.fixEmpty(credentialInputFile);
@@ -408,31 +465,26 @@ public class VMGRLaunchStep extends Step {
     @DataBoundSetter
     public void setInaccessibleResolver(@CheckForNull String inaccessibleResolver) {
         this.inaccessibleResolver = Util.fixEmpty(inaccessibleResolver);
-
     }
 
     @DataBoundSetter
     public void setStoppedResolver(@CheckForNull String stoppedResolver) {
         this.stoppedResolver = Util.fixEmpty(stoppedResolver);
-
     }
 
     @DataBoundSetter
     public void setFailedResolver(@CheckForNull String failedResolver) {
         this.failedResolver = Util.fixEmpty(failedResolver);
-
     }
 
     @DataBoundSetter
     public void setDoneResolver(@CheckForNull String doneResolver) {
         this.doneResolver = Util.fixEmpty(doneResolver);
-
     }
 
     @DataBoundSetter
     public void setSuspendedResolver(@CheckForNull String suspendedResolver) {
         this.suspendedResolver = Util.fixEmpty(suspendedResolver);
-
     }
 
     @DataBoundSetter
@@ -725,36 +777,42 @@ public class VMGRLaunchStep extends Step {
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckStaticAttributeList(@QueryParameter String value) throws IOException, ServletException {
-            if (value != null) {
-                if (value.indexOf(";") > 0) {
-                    return FormValidation.error("(;) is not allowed for seperation.  Please use only comma as a seperator.");
-                } else if (value.indexOf("|") > 0) {
-                    return FormValidation.error("(|) is not allowed for seperation.  Please use only comma as a seperator.");
-                } else if (value.indexOf(".") > 0) {
-                    return FormValidation.error("(.) is not allowed for seperation.  Please use only comma as a seperator.");
-                }
+        public FormValidation doCheckStaticAttributeList(@QueryParameter String value)
+                throws IOException, ServletException {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.ok();
+            }
+
+            if (value.indexOf(";") > 0) {
+                return FormValidation.error("(;) is not allowed for separation. Please use only comma as a separator.");
+            } else if (value.indexOf("|") > 0) {
+                return FormValidation.error("(|) is not allowed for separation. Please use only comma as a separator.");
+            } else if (value.indexOf(".") > 0) {
+                return FormValidation.error("(.) is not allowed for separation. Please use only comma as a separator.");
             }
 
             List<String> items = Arrays.asList(value.split("\\s*,\\s*"));
 
-            Iterator<String> iter = items.iterator();
-
-            String tmpAttr = null;
-            while (iter.hasNext()) {
-                tmpAttr = iter.next();
+            for (String tmpAttr : items) {
                 if (tmpAttr.indexOf(" ") > 0) {
-                    return FormValidation.error("'" + tmpAttr + "' is not a valid option for Verisium Manager attribute code name. Attribute code names can't have space.  Try using underscore instaed.");
+                    return FormValidation.error(
+                            "'" + tmpAttr
+                                    + "' is not a valid option for Verisium Manager attribute code name. Attribute code names can't have space. Try using underscore instead.");
                 } else if (tmpAttr.equals("first_failure_name")) {
-                    return FormValidation.warning("'" + tmpAttr + "' is already included as part of the stack error message by default.");
+                    return FormValidation.warning(
+                            "'" + tmpAttr + "' is already included as part of the stack error message by default.");
                 } else if (tmpAttr.equals("first_failure_description")) {
-                    return FormValidation.warning("'" + tmpAttr + "' is already included as part of the stack error message by default.");
+                    return FormValidation.warning(
+                            "'" + tmpAttr + "' is already included as part of the stack error message by default.");
                 } else if (tmpAttr.equals("computed_seed")) {
-                    return FormValidation.warning("'" + tmpAttr + "' is already included as part of the stack error message by default.");
+                    return FormValidation.warning(
+                            "'" + tmpAttr + "' is already included as part of the stack error message by default.");
                 } else if (tmpAttr.equals("test_group")) {
-                    return FormValidation.warning("'" + tmpAttr + "' is already included as part of the stack error message by default.");
+                    return FormValidation.warning(
+                            "'" + tmpAttr + "' is already included as part of the stack error message by default.");
                 } else if (tmpAttr.equals("test_name")) {
-                    return FormValidation.warning("'" + tmpAttr + "' is already included as part of the stack error message by default.");
+                    return FormValidation.warning(
+                            "'" + tmpAttr + "' is already included as part of the stack error message by default.");
                 }
             }
 
@@ -821,9 +879,12 @@ public class VMGRLaunchStep extends Step {
             return super.configure(req, formData);
         }
 
-        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired) throws IOException,
-                ServletException {
+        public FormValidation doTestConnection(
+                @QueryParameter("vAPIUser") final String vAPIUser,
+                @QueryParameter("vAPIPassword") final String vAPIPassword,
+                @QueryParameter("vAPIUrl") final String vAPIUrl,
+                @QueryParameter("authRequired") final boolean authRequired)
+                throws IOException, ServletException {
             try {
 
                 Utils utils = new Utils();
@@ -838,9 +899,11 @@ public class VMGRLaunchStep extends Step {
             }
         }
 
-        public FormValidation doTestArchiveUser(@QueryParameter("archiveUser") final String archiveUser, @QueryParameter("archivePassword") final String archivePassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl) throws IOException,
-                ServletException {
+        public FormValidation doTestArchiveUser(
+                @QueryParameter("archiveUser") final String archiveUser,
+                @QueryParameter("archivePassword") final String archivePassword,
+                @QueryParameter("vAPIUrl") final String vAPIUrl)
+                throws IOException, ServletException {
             try {
 
                 Utils utils = new Utils();
@@ -855,13 +918,18 @@ public class VMGRLaunchStep extends Step {
             }
         }
 
-        public FormValidation doTestExtraStaticAttr(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList) throws IOException,
-                ServletException {
+        public FormValidation doTestExtraStaticAttr(
+                @QueryParameter("vAPIUser") final String vAPIUser,
+                @QueryParameter("vAPIPassword") final String vAPIPassword,
+                @QueryParameter("vAPIUrl") final String vAPIUrl,
+                @QueryParameter("authRequired") final boolean authRequired,
+                @QueryParameter("staticAttributeList") final String staticAttributeList)
+                throws IOException, ServletException {
             try {
 
                 Utils utils = new Utils();
-                String output = utils.checkExtraStaticAttr(vAPIUrl, authRequired, vAPIUser, vAPIPassword, staticAttributeList);
+                String output =
+                        utils.checkExtraStaticAttr(vAPIUrl, authRequired, vAPIUser, vAPIPassword, staticAttributeList);
                 if (!output.startsWith("Failed")) {
                     return FormValidation.ok("Success. " + output);
                 } else {
@@ -874,9 +942,9 @@ public class VMGRLaunchStep extends Step {
 
         @Override
         public Set<Class<?>> getRequiredContext() {
-            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods,
+            // choose Tools | Templates.
             return ImmutableSet.of(FilePath.class, Run.class, Launcher.class, TaskListener.class, EnvVars.class);
         }
-
     }
 }

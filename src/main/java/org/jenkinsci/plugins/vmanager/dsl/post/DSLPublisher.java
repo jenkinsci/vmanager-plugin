@@ -5,38 +5,37 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
+import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import net.sf.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
-import javax.annotation.Nonnull;
-import jenkins.tasks.SimpleBuildStep;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import jakarta.servlet.ServletException;
+import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
+import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.vmanager.SummaryReportParams;
 import org.jenkinsci.plugins.vmanager.Utils;
 import org.jenkinsci.plugins.vmanager.VAPIConnectionParam;
 import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
@@ -96,10 +95,46 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public DSLPublisher(String vAPIUrl, String vAPIUser, String vAPIPassword, boolean authRequired, boolean advConfig, boolean dynamicUserId, int connTimeout, int readTimeout, boolean advancedFunctions,
-            boolean retrieveSummaryReport, boolean runReport, boolean metricsReport, boolean vPlanReport, String testsViewName, String metricsViewName, String vplanViewName, int testsDepth, int metricsDepth,
-            int vPlanDepth, String metricsInputType, String metricsAdvanceInput, String vPlanInputType, String vPlanAdvanceInput, String vPlanxFileName, String summaryType, boolean ctxInput,
-            String ctxAdvanceInput, String freeVAPISyntax, boolean deleteReportSyntaxInputFile, String vManagerVersion, boolean sendEmail, String emailList, String emailType, String emailInputFile, boolean deleteEmailInputFile, String summaryMode, boolean ignoreSSLError, String vAPICredentials, String credentialType) {
+    public DSLPublisher(
+            String vAPIUrl,
+            String vAPIUser,
+            String vAPIPassword,
+            boolean authRequired,
+            boolean advConfig,
+            boolean dynamicUserId,
+            int connTimeout,
+            int readTimeout,
+            boolean advancedFunctions,
+            boolean retrieveSummaryReport,
+            boolean runReport,
+            boolean metricsReport,
+            boolean vPlanReport,
+            String testsViewName,
+            String metricsViewName,
+            String vplanViewName,
+            int testsDepth,
+            int metricsDepth,
+            int vPlanDepth,
+            String metricsInputType,
+            String metricsAdvanceInput,
+            String vPlanInputType,
+            String vPlanAdvanceInput,
+            String vPlanxFileName,
+            String summaryType,
+            boolean ctxInput,
+            String ctxAdvanceInput,
+            String freeVAPISyntax,
+            boolean deleteReportSyntaxInputFile,
+            String vManagerVersion,
+            boolean sendEmail,
+            String emailList,
+            String emailType,
+            String emailInputFile,
+            boolean deleteEmailInputFile,
+            String summaryMode,
+            boolean ignoreSSLError,
+            String vAPICredentials,
+            String credentialType) {
 
         this.vAPIUrl = vAPIUrl;
         this.authRequired = authRequired;
@@ -181,12 +216,9 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
         summaryReportParams.deleteEmailInputFile = deleteEmailInputFile;
         summaryReportParams.summaryMode = summaryMode;
         summaryReportParams.ignoreSSLError = ignoreSSLError;
-
     }
 
-    public DSLPublisher() {
-
-    }
+    public DSLPublisher() {}
 
     public String getSummaryMode() {
         return summaryMode;
@@ -345,21 +377,26 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath fp, @Nonnull Launcher launcher, @Nonnull TaskListener tl) throws InterruptedException, IOException {
+    public void perform(
+            @Nonnull Run<?, ?> run, @Nonnull FilePath fp, @Nonnull Launcher launcher, @Nonnull TaskListener tl)
+            throws InterruptedException, IOException {
 
         this.build = run;
         DSLBuildAction buildAction = new DSLBuildAction("NA", run);
         List<DSLBuildAction> buildActionList = run.getActions(DSLBuildAction.class);
-        if (buildActionList.isEmpty()){
+        if (buildActionList.isEmpty()) {
             run.addAction(buildAction);
         }
-        
 
         if (advancedFunctions) {
 
             if ("credential".equals(credentialType)) {
-                //overwrite the plain text with the credentials
-                StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(this.vAPICredentials, StandardUsernamePasswordCredentials.class, run, Collections.<DomainRequirement>emptyList());
+                // overwrite the plain text with the credentials
+                StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(
+                        this.vAPICredentials,
+                        StandardUsernamePasswordCredentials.class,
+                        run,
+                        Collections.<DomainRequirement>emptyList());
                 assert c != null;
                 vAPIConnectionParam.vAPIUser = c.getUsername();
                 vAPIConnectionParam.vAPIPassword = c.getPassword().getPlainText();
@@ -367,14 +404,14 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
 
             if (retrieveSummaryReport) {
 
-                ReportBuildAction reportAction = new ReportBuildAction(run, summaryReportParams, vAPIConnectionParam, tl, fp, launcher);
+                ReportBuildAction reportAction =
+                        new ReportBuildAction(run, summaryReportParams, vAPIConnectionParam, tl, fp, launcher);
                 List<ReportBuildAction> reportActionList = run.getActions(ReportBuildAction.class);
-                if (reportActionList.isEmpty()){
+                if (reportActionList.isEmpty()) {
                     run.addAction(reportAction);
                 }
             }
         }
-
     }
 
     // Overridden for better type safety.
@@ -403,7 +440,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
+            // Indicates that this builder can be used with all kinds of project types
             return true;
         }
 
@@ -430,9 +467,14 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
             return super.configure(req, formData);
         }
 
-        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
-                @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
+        public FormValidation doTestConnection(
+                @QueryParameter("vAPIUser") final String vAPIUser,
+                @QueryParameter("vAPIPassword") final String vAPIPassword,
+                @QueryParameter("vAPIUrl") final String vAPIUrl,
+                @QueryParameter("authRequired") final boolean authRequired,
+                @QueryParameter("credentialType") final String credentialType,
+                @QueryParameter("vAPICredentials") final String vAPICredentials,
+                @AncestorInPath Item item)
                 throws IOException, ServletException {
             try {
 
@@ -440,10 +482,15 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
                 String tempPassword = vAPIPassword;
                 boolean foundMatchUserPassword = false;
                 if ("credential".equals(credentialType)) {
-                    //System.out.println("Trying to find the credential...");
-                    //overwrite the plain text with the credentials
-                    //StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(vAPICredentials, StandardUsernamePasswordCredentials.class, item, Collections.<DomainRequirement>emptyList());
-                    List<StandardUsernamePasswordCredentials> listOfC = CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+                    // System.out.println("Trying to find the credential...");
+                    // overwrite the plain text with the credentials
+                    // StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(vAPICredentials,
+                    // StandardUsernamePasswordCredentials.class, item, Collections.<DomainRequirement>emptyList());
+                    List<StandardUsernamePasswordCredentials> listOfC = CredentialsProvider.lookupCredentials(
+                            StandardUsernamePasswordCredentials.class,
+                            item,
+                            ACL.SYSTEM,
+                            Collections.<DomainRequirement>emptyList());
                     Iterator<StandardUsernamePasswordCredentials> cIterator = listOfC.iterator();
                     StandardUsernamePasswordCredentials tmpHolder = null;
                     while (cIterator.hasNext()) {
@@ -454,7 +501,6 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
                             foundMatchUserPassword = true;
                             break;
                         }
-
                     }
 
                 } else {
@@ -470,7 +516,8 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
                         return FormValidation.error(output);
                     }
                 } else {
-                    return FormValidation.error("Could not extract the user/password from the supplied Credential object.  Object was not found within your Jenkins domain.");
+                    return FormValidation.error(
+                            "Could not extract the user/password from the supplied Credential object.  Object was not found within your Jenkins domain.");
                 }
             } catch (Exception e) {
                 return FormValidation.error("Client error : " + e.getMessage());
@@ -488,57 +535,55 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
         }
 
         public ListBoxModel doFillVAPICredentialsItems(
-                @AncestorInPath Item item,
-                @QueryParameter String vAPICredentials
-        ) {
+                @AncestorInPath Item item, @QueryParameter String vAPICredentials) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (item == null) {
                 if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
                     return result.includeCurrentValue(vAPICredentials); // (2)
                 }
             } else {
-                if (!item.hasPermission(Item.EXTENDED_READ)
-                        && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!item.hasPermission(Item.EXTENDED_READ) && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return result.includeCurrentValue(vAPICredentials); // (2)
                 }
             }
-            return result
-                    .includeEmptyValue()
-                    .includeMatchingAs(ACL.SYSTEM, Jenkins.getInstance(), StandardUsernamePasswordCredentials.class, Collections.<DomainRequirement>emptyList(), CredentialsMatchers.always())
+            return result.includeEmptyValue()
+                    .includeMatchingAs(
+                            ACL.SYSTEM,
+                            Jenkins.getInstance(),
+                            StandardUsernamePasswordCredentials.class,
+                            Collections.<DomainRequirement>emptyList(),
+                            CredentialsMatchers.always())
                     .includeCurrentValue(vAPICredentials); // (5)
-
         }
 
         public FormValidation doCheckVAPICredentials(
                 @AncestorInPath Item item, // (2)
                 @QueryParameter String value // (1)
-
-        ) {
+                ) {
             if (item == null) {
                 if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
                     return FormValidation.ok(); // (3)
                 }
             } else {
-                if (!item.hasPermission(Item.EXTENDED_READ)
-                        && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+                if (!item.hasPermission(Item.EXTENDED_READ) && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
                     return FormValidation.ok(); // (3)
                 }
             }
             if (StringUtils.isBlank(value)) { // (4)
                 return FormValidation.ok(); // (4)
             }
-            //.includeMatchingAs(ACL.SYSTEM,Jenkins.getInstance(),StandardUsernamePasswordCredentials.class,Collections.<DomainRequirement>emptyList(),CredentialsMatchers.always())
+            // .includeMatchingAs(ACL.SYSTEM,Jenkins.getInstance(),StandardUsernamePasswordCredentials.class,Collections.<DomainRequirement>emptyList(),CredentialsMatchers.always())
             if (CredentialsProvider.listCredentials( // (6)
-                    StandardUsernamePasswordCredentials.class, // (1)
-                    item,
-                    ACL.SYSTEM,
-                    Collections.<DomainRequirement>emptyList(),
-                    CredentialsMatchers.always() // (6)
-            ).isEmpty()) {
+                            StandardUsernamePasswordCredentials.class, // (1)
+                            item,
+                            ACL.SYSTEM,
+                            Collections.<DomainRequirement>emptyList(),
+                            CredentialsMatchers.always() // (6)
+                            )
+                    .isEmpty()) {
                 return FormValidation.error("Cannot find currently selected credentials");
             }
             return FormValidation.ok();
         }
-
     }
 }

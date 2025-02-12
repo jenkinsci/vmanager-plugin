@@ -1,8 +1,8 @@
 package org.jenkins.plugins;
 
 import org.jenkinsci.plugins.vmanager.ReportManager;
-import org.jenkinsci.plugins.vmanager.Utils;
 import org.jenkinsci.plugins.vmanager.SummaryReportParams;
+import org.jenkinsci.plugins.vmanager.Utils;
 import org.jenkinsci.plugins.vmanager.VAPIConnectionParam;
 
 public class TestPlugin {
@@ -41,15 +41,14 @@ public class TestPlugin {
 
         TestPlugin testPlugin = new TestPlugin();
         testPlugin.test();
-
     }
 
     public void test() throws Exception {
 
         Utils utils = new Utils();
 
-        //System.out.println(Utils.getRegressionURLFromVAPIURL("https://vlnx488:50500/vmgr/vapi"));
-        //Test Summary Report
+        // System.out.println(Utils.getRegressionURLFromVAPIURL("https://vlnx488:50500/vmgr/vapi"));
+        // Test Summary Report
         SummaryReportParams summaryReportParams;
         VAPIConnectionParam vAPIConnectionParam;
         vAPIConnectionParam = new VAPIConnectionParam();
@@ -65,64 +64,59 @@ public class TestPlugin {
         summaryReportParams.runReport = true;
         summaryReportParams.metricsReport = true;
         summaryReportParams.vPlanReport = true;
-        
+
         summaryReportParams.testsDepth = 6;
         summaryReportParams.vPlanDepth = 6;
         summaryReportParams.metricsDepth = 6;
         summaryReportParams.testsViewName = "Tal_ALL";
         summaryReportParams.vplanViewName = "All_Vplan";
         summaryReportParams.metricsViewName = "All_Metrics";
-        
+
         summaryReportParams.metricsInputType = "basic";
         summaryReportParams.vPlanInputType = "basic";
         summaryReportParams.vPlanxFileName = "/home/segal/work/vpm/APB_UART.vplanx";
-        
+
         summaryReportParams.summaryType = "wizard";
         summaryReportParams.ctxInput = true;
         summaryReportParams.ctxAdvanceInput = "{\"vplanFile\":\"\\/home\\/segal\\/work\\/vpm\\/APB_UART.vplanx\"}";
-        
-        
-       
-        
-        
-        ReportManager reportManager = new ReportManager(summaryReportParams,vAPIConnectionParam,true);
-        reportManager.retrievReportFromServer(false,null);
+
+        ReportManager reportManager = new ReportManager(summaryReportParams, vAPIConnectionParam, true);
+        reportManager.retrievReportFromServer(false, null);
 
         /*
-        
-        //Test Reading VSIF input file
-        String[] vsifFileNames = null;
-        if ("static".equals(vsifType)) {
-            vsifFileNames = new String[1];
-            vsifFileNames[0] = vSIFName;
-        } else {
-            vsifFileNames = utils.loadVSIFFileNames(buildID, buildNumber, buildArtifactPath, vSIFInputFile, null, deleteInputFile);
-        }
 
-        //Test connection testing
-        utils.checkVAPIConnection(vAPIUrl, authRequired, vAPIUser, vAPIPassword);
+                //Test Reading VSIF input file
+                String[] vsifFileNames = null;
+                if ("static".equals(vsifType)) {
+                    vsifFileNames = new String[1];
+                    vsifFileNames[0] = vSIFName;
+                } else {
+                    vsifFileNames = utils.loadVSIFFileNames(buildID, buildNumber, buildArtifactPath, vSIFInputFile, null, deleteInputFile);
+                }
 
-        //Test attributes for JUnit taken from runs
-        String testAttr = utils.checkExtraStaticAttr(vAPIUrl, authRequired, vAPIUser, vAPIPassword, "comment,status,first_failure_name");
-        System.out.println(testAttr);
+                //Test connection testing
+                utils.checkVAPIConnection(vAPIUrl, authRequired, vAPIUser, vAPIPassword);
 
-        StepHolder stepHolder = null;
-        if (waitTillSessionEnds) {
-            JUnitRequestHolder jUnitRequestHolder = new JUnitRequestHolder(generateJUnitXML, extraAttributesForFailures, staticAttributeList, false);
-            stepHolder = new StepHolder(inaccessibleResolver, stoppedResolver, failedResolver, doneResolver, suspendedResolver, waitTillSessionEnds, stepSessionTimeout, jUnitRequestHolder, markBuildAsFailedIfAllRunFailed, markJobAsFailedIfAllRunFailed, markBuildAsPassedIfAllRunPassed, failJobUnlessAllRunPassed);
-        }
-        String[] sessionNames = new String[3];
-        sessionNames[0] = "vm_basic_scopes.root.19_09_10_13_57_26_6081";
-        sessionNames[1] = "vm_basic_scopes.root.19_09_09_19_46_00_6347";
-        sessionNames[2] = "vm_basic_scopes.root.19_09_09_12_43_21_5408	";
-        utils.executeVSIFLaunch(vsifFileNames, vAPIUrl, authRequired, vAPIUser, vAPIPassword, null, false, buildID, buildNumber, buildArtifactPath, 0, 0, false, null, false, null, null, stepHolder, "", buildArtifactPath, null, false, null, "batch", sessionNames);
+                //Test attributes for JUnit taken from runs
+                String testAttr = utils.checkExtraStaticAttr(vAPIUrl, authRequired, vAPIUser, vAPIPassword, "comment,status,first_failure_name");
+                System.out.println(testAttr);
 
-        //String buildStatus = BuildStatusMap.getValue(buildID, buildNumber, buildArtifactPath+"", "id", true);
-        //System.out.println("Build status is '" + buildStatus + "'" );
-        //utils.executeAPI("{}", "/sessions/count", vAPIUrl, authRequired, vAPIUser, vAPIPassword, "POST", null, false, buildID+"-1", buildNumber, buildArtifactPath,0,0,false);
-        //utils.executeAPI("{}", "/runs/get?id=5", vAPIUrl, authRequired, vAPIUser, vAPIPassword, "GET", null, false, buildID+"-2", buildNumber, buildArtifactPath,0,0,false);
+                StepHolder stepHolder = null;
+                if (waitTillSessionEnds) {
+                    JUnitRequestHolder jUnitRequestHolder = new JUnitRequestHolder(generateJUnitXML, extraAttributesForFailures, staticAttributeList, false);
+                    stepHolder = new StepHolder(inaccessibleResolver, stoppedResolver, failedResolver, doneResolver, suspendedResolver, waitTillSessionEnds, stepSessionTimeout, jUnitRequestHolder, markBuildAsFailedIfAllRunFailed, markJobAsFailedIfAllRunFailed, markBuildAsPassedIfAllRunPassed, failJobUnlessAllRunPassed);
+                }
+                String[] sessionNames = new String[3];
+                sessionNames[0] = "vm_basic_scopes.root.19_09_10_13_57_26_6081";
+                sessionNames[1] = "vm_basic_scopes.root.19_09_09_19_46_00_6347";
+                sessionNames[2] = "vm_basic_scopes.root.19_09_09_12_43_21_5408	";
+                utils.executeVSIFLaunch(vsifFileNames, vAPIUrl, authRequired, vAPIUser, vAPIPassword, null, false, buildID, buildNumber, buildArtifactPath, 0, 0, false, null, false, null, null, stepHolder, "", buildArtifactPath, null, false, null, "batch", sessionNames);
 
-*/
+                //String buildStatus = BuildStatusMap.getValue(buildID, buildNumber, buildArtifactPath+"", "id", true);
+                //System.out.println("Build status is '" + buildStatus + "'" );
+                //utils.executeAPI("{}", "/sessions/count", vAPIUrl, authRequired, vAPIUser, vAPIPassword, "POST", null, false, buildID+"-1", buildNumber, buildArtifactPath,0,0,false);
+                //utils.executeAPI("{}", "/runs/get?id=5", vAPIUrl, authRequired, vAPIUser, vAPIPassword, "GET", null, false, buildID+"-2", buildNumber, buildArtifactPath,0,0,false);
+
+        */
     }
-
 }

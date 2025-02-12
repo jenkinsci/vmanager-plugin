@@ -4,9 +4,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-
 import java.io.*;
-
 import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.vmanager.PostActionBase;
 import org.jenkinsci.plugins.vmanager.ReportManager;
@@ -20,7 +18,6 @@ public class ReportBuildAction extends PostActionBase implements Serializable, R
     private transient Run<?, ?> build;
     private transient TaskListener listener;
     private transient ReportManager reportManager;
-
 
     @Override
     public String getIconFileName() {
@@ -37,7 +34,6 @@ public class ReportBuildAction extends PostActionBase implements Serializable, R
         return "vManagerSummaryReport";
     }
 
-
     public int getBuildNumber() {
         return this.build.number;
     }
@@ -46,13 +42,19 @@ public class ReportBuildAction extends PostActionBase implements Serializable, R
         return build;
     }
 
-    public ReportBuildAction(final Run<?, ?> build, SummaryReportParams summaryReportParams, VAPIConnectionParam vAPIConnectionParam, TaskListener listener, FilePath filePath, Launcher launcher) {
+    public ReportBuildAction(
+            final Run<?, ?> build,
+            SummaryReportParams summaryReportParams,
+            VAPIConnectionParam vAPIConnectionParam,
+            TaskListener listener,
+            FilePath filePath,
+            Launcher launcher) {
 
         this.build = build;
         this.listener = listener;
 
-        //listener.getLogger().println("Setting FilePath as: " + filePath);
-        //listener.getLogger().println("Setting secondary FilePath as: " + fp);
+        // listener.getLogger().println("Setting FilePath as: " + filePath);
+        // listener.getLogger().println("Setting secondary FilePath as: " + fp);
         this.reportManager = new ReportManager(build, summaryReportParams, vAPIConnectionParam, listener, filePath);
         try {
             boolean isStreaming = false;

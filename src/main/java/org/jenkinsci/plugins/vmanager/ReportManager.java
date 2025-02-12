@@ -42,7 +42,6 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -61,7 +60,6 @@ import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.json.simple.JSONArray;
-
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -71,7 +69,9 @@ import org.json.simple.parser.JSONParser;
  */
 public class ReportManager {
 
-    private final static String runsFilter = "{\"filter\":{\"@c\":\".RelationFilter\",\"relationName\":\"session\",\"filter\":{\"@c\":\".ChainedFilter\",\"condition\":\"OR\",\"chain\":[" + "######" + "]}}}";
+    private static final String runsFilter =
+            "{\"filter\":{\"@c\":\".RelationFilter\",\"relationName\":\"session\",\"filter\":{\"@c\":\".ChainedFilter\",\"condition\":\"OR\",\"chain\":["
+                    + "######" + "]}}}";
 
     private Run<?, ?> build;
     private SummaryReportParams summaryReportParams;
@@ -80,32 +80,38 @@ public class ReportManager {
     private TaskListener listener;
     private boolean testMode = false;
     private Utils utils;
-   
 
-    public ReportManager(Run<?, ?> build, SummaryReportParams summaryReportParams, VAPIConnectionParam vAPIConnectionParam, TaskListener listener,FilePath filePath) {
+    public ReportManager(
+            Run<?, ?> build,
+            SummaryReportParams summaryReportParams,
+            VAPIConnectionParam vAPIConnectionParam,
+            TaskListener listener,
+            FilePath filePath) {
         this.build = build;
         this.summaryReportParams = summaryReportParams;
         this.vAPIConnectionParam = vAPIConnectionParam;
         this.listener = listener;
-              
-        if (vAPIConnectionParam != null){
+
+        if (vAPIConnectionParam != null) {
             try {
-                this.vAPIConnectionParam.vAPIUrl = TokenMacro.expandAll(build,filePath, listener, vAPIConnectionParam.vAPIUrl);
+                this.vAPIConnectionParam.vAPIUrl =
+                        TokenMacro.expandAll(build, filePath, listener, vAPIConnectionParam.vAPIUrl);
             } catch (Exception e) {
                 e.printStackTrace();
-                listener.getLogger().println("Failed to extract out macro from the input of vAPIUrl: " + vAPIConnectionParam.vAPIUrl);
+                listener.getLogger()
+                        .println("Failed to extract out macro from the input of vAPIUrl: "
+                                + vAPIConnectionParam.vAPIUrl);
             }
         }
 
         Job job = build.getParent();
         String workingDir = job.getBuildDir() + File.separator + build.getNumber();
         vmgrRun = new VMGRRun(build, workingDir, job.getBuildDir().getAbsolutePath());
-        this.utils = new Utils(build,listener,filePath);
-        
-
+        this.utils = new Utils(build, listener, filePath);
     }
 
-    public ReportManager(SummaryReportParams summaryReportParams, VAPIConnectionParam vAPIConnectionParam, boolean testMode) {
+    public ReportManager(
+            SummaryReportParams summaryReportParams, VAPIConnectionParam vAPIConnectionParam, boolean testMode) {
         this.testMode = testMode;
         this.summaryReportParams = summaryReportParams;
         this.vAPIConnectionParam = vAPIConnectionParam;
@@ -119,14 +125,20 @@ public class ReportManager {
             listOfSessions = new String[1];
             listOfSessions[0] = "1";
         } else {
-            sessionIdFromBuild = BuildStatusMap.getValue(vmgrRun.getRun().getId(), vmgrRun.getRun().getNumber(), vmgrRun.getJobWorkingDir() + "", "id", true);
+            sessionIdFromBuild = BuildStatusMap.getValue(
+                    vmgrRun.getRun().getId(),
+                    vmgrRun.getRun().getNumber(),
+                    vmgrRun.getJobWorkingDir() + "",
+                    "id",
+                    true);
             listOfSessions = sessionIdFromBuild.split("\\s*,\\s*");
         }
 
         String result = "";
         int commaCounter = listOfSessions.length - 1;
         for (String listOfSession : listOfSessions) {
-            result = result + "{\"attName\":\"id\",\"operand\":\"EQUALS\",\"@c\":\".AttValueFilter\",\"attValue\":\"" + listOfSession.trim() + "\"}";
+            result = result + "{\"attName\":\"id\",\"operand\":\"EQUALS\",\"@c\":\".AttValueFilter\",\"attValue\":\""
+                    + listOfSession.trim() + "\"}";
             if (commaCounter > 0) {
                 result = result + ",";
             }
@@ -145,29 +157,38 @@ public class ReportManager {
             for (String email : values) {
                 output.append("\"").append(email.trim()).append("\",");
             }
-            //Remove the last comma
+            // Remove the last comma
             if (output.length() > 2) {
                 output.setLength(output.length() - 1);
             }
         } else {
             try {
-                emails = utils.loadDataFromInputFiles(vmgrRun.getRun().getId(), vmgrRun.getRun().getNumber(), "" + vmgrRun.getJobWorkingDir(), summaryReportParams.emailInputFile, listener, summaryReportParams.deleteEmailInputFile, "emails", "emails.input");
+                emails = utils.loadDataFromInputFiles(
+                        vmgrRun.getRun().getId(),
+                        vmgrRun.getRun().getNumber(),
+                        "" + vmgrRun.getJobWorkingDir(),
+                        summaryReportParams.emailInputFile,
+                        listener,
+                        summaryReportParams.deleteEmailInputFile,
+                        "emails",
+                        "emails.input");
                 for (String email : emails) {
                     output.append("\"").append(email.trim()).append("\",");
                 }
 
-                //Remove the last comma
+                // Remove the last comma
                 if (output.length() > 2) {
                     output.setLength(output.length() - 1);
                 }
 
             } catch (Exception e) {
-                listener.getLogger().println("Failed to find the email input file " + summaryReportParams.emailInputFile + " or any email file within the workspace for this build.\n " + e.getMessage());
+                listener.getLogger()
+                        .println("Failed to find the email input file " + summaryReportParams.emailInputFile
+                                + " or any email file within the workspace for this build.\n " + e.getMessage());
             }
         }
 
         return output.toString();
-
     }
 
     public String buildPostParamForSummaryReport(boolean email) throws Exception {
@@ -194,7 +215,7 @@ public class ReportManager {
             JSONObject vplanData;
             JSONObject ctxData = null;
 
-            //Go over static params
+            // Go over static params
             String staticParams = SummaryReportParams.staticReportParams;
 
             if (summaryReportParams.runReport) {
@@ -224,7 +245,7 @@ public class ReportManager {
                 staticParams = staticParams.replace("$vplan_view_name", "");
             }
 
-            //If this is an email send operation, set the emails and remove the url link
+            // If this is an email send operation, set the emails and remove the url link
             if (email) {
                 staticParams = staticParams.replace("$link_output", "false");
                 staticParams = staticParams.replace("$jenkins_mode", "");
@@ -233,7 +254,7 @@ public class ReportManager {
                 staticParams = staticParams.replace("$link_output", "true");
             }
 
-            //set if stream mode of not based on vManager version
+            // set if stream mode of not based on vManager version
             if ("stream".equals(summaryReportParams.vManagerVersion)) {
                 staticParams = staticParams.replace("$jenkins_mode", "\"jenkins\":true,");
             } else {
@@ -252,26 +273,31 @@ public class ReportManager {
                     } else {
                         try {
                             FilePath filePath = build.getExecutor().getCurrentWorkspace();
-                            tmpDataHolder =TokenMacro.expandAll(build, filePath, listener, summaryReportParams.metricsAdvanceInput.trim());
+                            tmpDataHolder = TokenMacro.expandAll(
+                                    build, filePath, listener, summaryReportParams.metricsAdvanceInput.trim());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            listener.getLogger().println("Failed to extract out macro from the input of report metricsAdvanceInput: " + summaryReportParams.metricsAdvanceInput);
+                            listener.getLogger()
+                                    .println(
+                                            "Failed to extract out macro from the input of report metricsAdvanceInput: "
+                                                    + summaryReportParams.metricsAdvanceInput);
                             tmpDataHolder = summaryReportParams.metricsAdvanceInput.trim();
                         }
-                        
+
                         metricsData = (JSONObject) jsonParser.parse(tmpDataHolder);
                     }
                 } catch (Exception e) {
-                    listener.getLogger().println("ReportManager - fail to parse metricsData json input: " + tmpDataHolder);
+                    listener.getLogger()
+                            .println("ReportManager - fail to parse metricsData json input: " + tmpDataHolder);
                     throw e;
                 }
                 postData = postData + ",\"metricsData\":[" + metricsData.toJSONString() + "]";
             }
-            
+
             String parsedVPlanFileName = null;
             if (summaryReportParams.vPlanReport) {
                 String tmpDataHolder = null;
-                
+
                 try {
                     if (summaryReportParams.vPlanInputType.equals("basic")) {
                         tmpDataHolder = SummaryReportParams.vPlanData;
@@ -280,76 +306,95 @@ public class ReportManager {
                     } else {
                         try {
                             FilePath filePath = build.getExecutor().getCurrentWorkspace();
-                            tmpDataHolder =TokenMacro.expandAll(build, filePath, listener, summaryReportParams.vPlanAdvanceInput.trim());
+                            tmpDataHolder = TokenMacro.expandAll(
+                                    build, filePath, listener, summaryReportParams.vPlanAdvanceInput.trim());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            listener.getLogger().println("Failed to extract out macro from the input of report vPlanAdvanceInput: " + summaryReportParams.vPlanAdvanceInput);
+                            listener.getLogger()
+                                    .println("Failed to extract out macro from the input of report vPlanAdvanceInput: "
+                                            + summaryReportParams.vPlanAdvanceInput);
                             tmpDataHolder = summaryReportParams.vPlanAdvanceInput.trim();
                         }
-                        
+
                         vplanData = (JSONObject) jsonParser.parse(tmpDataHolder);
                     }
                 } catch (Exception e) {
-                    listener.getLogger().println("ReportManager - fail to parse vplanData json input: " + tmpDataHolder);
+                    listener.getLogger()
+                            .println("ReportManager - fail to parse vplanData json input: " + tmpDataHolder);
                     throw e;
                 }
 
                 try {
                     ctxData = (JSONObject) jsonParser.parse(SummaryReportParams.ctxData);
-                    
-                    //Check if this is a vPlan in DB
-                    if (summaryReportParams.vPlanxFileName.trim().indexOf("(DB)") > -1){
+
+                    // Check if this is a vPlan in DB
+                    if (summaryReportParams.vPlanxFileName.trim().indexOf("(DB)") > -1) {
                         ctxData.put("db-vplan", true);
-                        summaryReportParams.vPlanxFileName = summaryReportParams.vPlanxFileName.substring(0,summaryReportParams.vPlanxFileName.trim().indexOf("(DB)")).trim();
+                        summaryReportParams.vPlanxFileName = summaryReportParams
+                                .vPlanxFileName
+                                .substring(
+                                        0,
+                                        summaryReportParams
+                                                .vPlanxFileName
+                                                .trim()
+                                                .indexOf("(DB)"))
+                                .trim();
                     }
-                    
+
                     try {
                         FilePath filePath = build.getExecutor().getCurrentWorkspace();
-                        parsedVPlanFileName =TokenMacro.expandAll(build, filePath, listener, summaryReportParams.vPlanxFileName.trim());
+                        parsedVPlanFileName = TokenMacro.expandAll(
+                                build, filePath, listener, summaryReportParams.vPlanxFileName.trim());
                     } catch (Exception e) {
                         e.printStackTrace();
-                        listener.getLogger().println("Failed to extract out macro from the input of report vPlanxFileName: " + summaryReportParams.vPlanxFileName);
+                        listener.getLogger()
+                                .println("Failed to extract out macro from the input of report vPlanxFileName: "
+                                        + summaryReportParams.vPlanxFileName);
                         parsedVPlanFileName = summaryReportParams.vPlanxFileName.trim();
                     }
-                    
+
                     ctxData.put("vplanFile", parsedVPlanFileName);
                 } catch (Exception e) {
-                    listener.getLogger().println("ReportManager - fail to parse ctxData json input for vPlan name: " + summaryReportParams.vPlanxFileName);
+                    listener.getLogger()
+                            .println("ReportManager - fail to parse ctxData json input for vPlan name: "
+                                    + summaryReportParams.vPlanxFileName);
                     throw e;
                 }
 
                 postData = postData + ",\"vplanData\":[" + vplanData.toJSONString() + "]";
             }
 
-            //See if there's anything additional that comes from ctxData optional input:
+            // See if there's anything additional that comes from ctxData optional input:
             if (summaryReportParams.ctxInput) {
                 try {
                     String ctxDataStringForEvaluating = null;
                     try {
                         FilePath filePath = build.getExecutor().getCurrentWorkspace();
-                        ctxDataStringForEvaluating = TokenMacro.expandAll(build, filePath, listener, summaryReportParams.ctxAdvanceInput);
+                        ctxDataStringForEvaluating =
+                                TokenMacro.expandAll(build, filePath, listener, summaryReportParams.ctxAdvanceInput);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        listener.getLogger().println("Failed to extract out macro from the input of report ctxData: " + summaryReportParams.ctxAdvanceInput);
+                        listener.getLogger()
+                                .println("Failed to extract out macro from the input of report ctxData: "
+                                        + summaryReportParams.ctxAdvanceInput);
                         ctxDataStringForEvaluating = summaryReportParams.ctxAdvanceInput;
                     }
-                  
+
                     ctxData = (JSONObject) jsonParser.parse(ctxDataStringForEvaluating);
-                    
-                    
+
                     if (summaryReportParams.vPlanReport) {
                         if (!summaryReportParams.vPlanxFileName.trim().equals("")) {
-                            //There is a vPlan, check if there's also in the ctxData
+                            // There is a vPlan, check if there's also in the ctxData
                             if (!ctxData.containsKey("vplanFile")) {
                                 ctxData.put("vplanFile", parsedVPlanFileName);
                             }
                         }
                     }
-                    
-                    
 
                 } catch (Exception e) {
-                    listener.getLogger().println("ReportManager - fail to parse ctxData json input for vPlan name: " + summaryReportParams.vPlanxFileName);
+                    listener.getLogger()
+                            .println("ReportManager - fail to parse ctxData json input for vPlan name: "
+                                    + summaryReportParams.vPlanxFileName);
                     throw e;
                 }
 
@@ -363,17 +408,30 @@ public class ReportManager {
             postData = postData + ",\"rs\":" + runsFilter.replace("######", buildPostDataSessionFilter()) + "}";
 
         } else {
-            //User choose to place his own full vAPI request.  All we need to do is to add the RS part and send it over.
+            // User choose to place his own full vAPI request.  All we need to do is to add the RS part and send it
+            // over.
             if (!this.testMode) {
                 listener.getLogger().println("ReportManager - Using user freestyle json to bring the report...");
             }
-            //Load json from file
+            // Load json from file
 
             String freeVAPISyntax;
             if (this.testMode) {
-                freeVAPISyntax = utils.loadUserSyntaxForSummaryReport("20", 20, "" + "c://temp", summaryReportParams.freeVAPISyntax, null, summaryReportParams.deleteReportSyntaxInputFile);
+                freeVAPISyntax = utils.loadUserSyntaxForSummaryReport(
+                        "20",
+                        20,
+                        "" + "c://temp",
+                        summaryReportParams.freeVAPISyntax,
+                        null,
+                        summaryReportParams.deleteReportSyntaxInputFile);
             } else {
-                freeVAPISyntax = utils.loadUserSyntaxForSummaryReport(vmgrRun.getRun().getId(), vmgrRun.getRun().getNumber(), "" + vmgrRun.getJobWorkingDir(), summaryReportParams.freeVAPISyntax, listener, summaryReportParams.deleteReportSyntaxInputFile);
+                freeVAPISyntax = utils.loadUserSyntaxForSummaryReport(
+                        vmgrRun.getRun().getId(),
+                        vmgrRun.getRun().getNumber(),
+                        "" + vmgrRun.getJobWorkingDir(),
+                        summaryReportParams.freeVAPISyntax,
+                        listener,
+                        summaryReportParams.deleteReportSyntaxInputFile);
             }
             if (!this.testMode) {
                 listener.getLogger().println("ReportManager - User freestyle syntax is:\n" + freeVAPISyntax + "\n");
@@ -383,21 +441,25 @@ public class ReportManager {
             try {
                 userSyntaxData = (JSONObject) jsonParser.parse(freeVAPISyntax);
             } catch (Exception e) {
-                listener.getLogger().println("ReportManager - fail to parse user free syntax json input for summary report: " + summaryReportParams.vPlanxFileName);
+                listener.getLogger()
+                        .println("ReportManager - fail to parse user free syntax json input for summary report: "
+                                + summaryReportParams.vPlanxFileName);
                 throw e;
             }
 
-            //Add the RS part
+            // Add the RS part
             JSONObject rsData;
             try {
                 rsData = (JSONObject) jsonParser.parse(runsFilter.replace("######", buildPostDataSessionFilter()));
             } catch (Exception e) {
-                listener.getLogger().println("ReportManager - fail to parse rsData for sessions list: " + buildPostDataSessionFilter());
+                listener.getLogger()
+                        .println("ReportManager - fail to parse rsData for sessions list: "
+                                + buildPostDataSessionFilter());
                 throw e;
             }
             userSyntaxData.put("rs", rsData);
 
-            //If this is 19.09 server adds the jenkins:true key, otherwise remove the key
+            // If this is 19.09 server adds the jenkins:true key, otherwise remove the key
             if (userSyntaxData.containsKey("jenkins")) {
                 userSyntaxData.remove("jenkins");
             }
@@ -405,30 +467,28 @@ public class ReportManager {
                 userSyntaxData.put("jenkins", true);
             }
 
-            //Add the email part
-            //If this is an email send operation, set the emails and remove the url link
+            // Add the email part
+            // If this is an email send operation, set the emails and remove the url link
             if (email) {
-                //If user set his own email, continue and skip
+                // If user set his own email, continue and skip
                 if (!userSyntaxData.containsKey("emails")) {
                     JSONArray jsonArray = (JSONArray) jsonParser.parse("[" + getReportEmailAddresses() + "]");
                     userSyntaxData.put("emails", jsonArray);
                 }
-                //Also no need for jenkins:true
+                // Also no need for jenkins:true
                 if (userSyntaxData.containsKey("jenkins")) {
                     userSyntaxData.remove("jenkins");
                 }
-                //Also no need for link_output:true
+                // Also no need for link_output:true
                 if (userSyntaxData.containsKey("linkOutput")) {
                     userSyntaxData.remove("linkOutput");
                 }
             }
 
             postData = userSyntaxData.toJSONString();
-
         }
 
         return postData;
-
     }
 
     public void fetchFromRemoteURL(String reportUrl) throws Exception {
@@ -438,7 +498,8 @@ public class ReportManager {
         try {
             urlObject = (JSONObject) jsonParser.parse(reportUrl);
         } catch (Exception e) {
-            listener.getLogger().println("ReportManager - fail to parse url from /reports/generate-summary-report: " + reportUrl);
+            listener.getLogger()
+                    .println("ReportManager - fail to parse url from /reports/generate-summary-report: " + reportUrl);
             throw e;
         }
 
@@ -452,7 +513,7 @@ public class ReportManager {
             jobWorkingDir = vmgrRun.getJobWorkingDir();
         }
 
-        //Fix for SECURITY-1615 - Use Apache dedicated instead
+        // Fix for SECURITY-1615 - Use Apache dedicated instead
         CloseableHttpClient httpClient = null;
         if (summaryReportParams.ignoreSSLError) {
             httpClient = fixUntrustCertificate();
@@ -473,7 +534,8 @@ public class ReportManager {
                 BufferedReader reader = null;
                 try {
 
-                    reader = utils.loadFileFromWorkSpace(buildId, buildNumber, jobWorkingDir, null, listener, false, "user.input");
+                    reader = utils.loadFileFromWorkSpace(
+                            buildId, buildNumber, jobWorkingDir, null, listener, false, "user.input");
                     String line = null;
                     while ((line = reader.readLine()) != null) {
                         username = line;
@@ -496,7 +558,8 @@ public class ReportManager {
             }
 
             String userpass = username + ":" + vAPIConnectionParam.vAPIPassword;
-            String basicAuth = "Basic " + java.util.Base64.getUrlEncoder().encodeToString(userpass.getBytes(StandardCharsets.UTF_8));
+            String basicAuth = "Basic "
+                    + java.util.Base64.getUrlEncoder().encodeToString(userpass.getBytes(StandardCharsets.UTF_8));
             httpGet.setHeader("Authorization", basicAuth);
         }
 
@@ -530,11 +593,11 @@ public class ReportManager {
                 output = output.replace("</html>", "");
                 output = output.replace("<body>", "");
                 output = output.replace("</body>", "");
-                
+
                 String fileOutput = buildNumber + "." + buildId + ".summary.report";
-                if (utils.getFilePath() == null){
-                    //Pipeline always run on master
-                    fileOutput = jobWorkingDir + File.separator + fileOutput;            
+                if (utils.getFilePath() == null) {
+                    // Pipeline always run on master
+                    fileOutput = jobWorkingDir + File.separator + fileOutput;
                 }
                 StringBuffer writer = new StringBuffer();
                 writer.append(output);
@@ -548,12 +611,11 @@ public class ReportManager {
                 httpResponse.close();
             }
         }
-
     }
 
-    public void retrievReportFromServer(boolean isStreamingOn,Launcher launcher) throws Exception {
+    public void retrievReportFromServer(boolean isStreamingOn, Launcher launcher) throws Exception {
 
-        //In case user choose to bring the report manualy skip and return
+        // In case user choose to bring the report manualy skip and return
         if (summaryReportParams.summaryMode.equals("selfmade")) {
             return;
         }
@@ -576,11 +638,26 @@ public class ReportManager {
         }
 
         try {
-            conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobWorkingDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
+            conn = utils.getVAPIConnection(
+                    apiURL,
+                    vAPIConnectionParam.authRequired,
+                    vAPIConnectionParam.vAPIUser,
+                    vAPIConnectionParam.vAPIPassword,
+                    "POST",
+                    vAPIConnectionParam.dynamicUserId,
+                    buildId,
+                    buildNumber,
+                    jobWorkingDir,
+                    listener,
+                    vAPIConnectionParam.connTimeout,
+                    vAPIConnectionParam.readTimeout,
+                    vAPIConnectionParam.advConfig);
             OutputStream os = conn.getOutputStream();
             String postData = buildPostParamForSummaryReport(false);
             if (!this.testMode) {
-                listener.getLogger().println("ReportManager is using the following POST data for getting the summary report:\n" + postData);
+                listener.getLogger()
+                        .println("ReportManager is using the following POST data for getting the summary report:\n"
+                                + postData);
             } else {
                 System.out.println(postData);
             }
@@ -590,7 +667,8 @@ public class ReportManager {
 
             if (checkResponseCode(conn)) {
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
+                BufferedReader br =
+                        new BufferedReader(new InputStreamReader((conn.getInputStream()), StandardCharsets.UTF_8));
 
                 String fileOutput;
                 StringBuffer sb;
@@ -601,14 +679,14 @@ public class ReportManager {
                     while ((output = br.readLine()) != null) {
                         writer.append(output);
                     }
-                    if (utils.getFilePath() == null){
-                        //Pipeline always run on master
-                        fileOutput = jobWorkingDir + File.separator + fileOutput;            
+                    if (utils.getFilePath() == null) {
+                        // Pipeline always run on master
+                        fileOutput = jobWorkingDir + File.separator + fileOutput;
                     }
                     utils.saveFileOnDisk(fileOutput, writer.toString());
-                    utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report", launcher,writer.toString());
+                    utils.moveFromNodeToMaster(
+                            buildNumber + "." + buildId + ".summary.report", launcher, writer.toString());
 
-                    
                     if (!this.testMode) {
                         listener.getLogger().println("Report Summary was created succesfully.");
                     }
@@ -622,33 +700,40 @@ public class ReportManager {
                 br.close();
             } else {
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
+                BufferedReader br =
+                        new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
                 String output;
                 String fileOutput = buildNumber + "." + buildId + ".summary.report";
-                if (utils.getFilePath() == null){
-                    //Pipeline always run on master
-                    fileOutput = jobWorkingDir + File.separator + fileOutput;            
+                if (utils.getFilePath() == null) {
+                    // Pipeline always run on master
+                    fileOutput = jobWorkingDir + File.separator + fileOutput;
                 }
                 StringBuffer writer = new StringBuffer();
-                writer.append("<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/support-icon.png\"></img></p><p>");
-                writer.append("Failure to retrieve the report from the Verisium Manager server for this build.  Check your parameters.<br>Below you can find the exception that was thrown during the retrieval process:<br><br><strong>");
+                writer.append(
+                        "<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/support-icon.png\"></img></p><p>");
+                writer.append(
+                        "Failure to retrieve the report from the Verisium Manager server for this build.  Check your parameters.<br>Below you can find the exception that was thrown during the retrieval process:<br><br><strong>");
                 while ((output = br.readLine()) != null) {
                     writer.append(output).append("<br>");
                 }
 
                 if (conn.getResponseCode() == 500) {
-                    //This is an error with the existance of the acctual API call.  Probably because the version is too old
+                    // This is an error with the existance of the acctual API call.  Probably because the version is too
+                    // old
                     if ("stream".equals(summaryReportParams.vManagerVersion)) {
                         writer.append("<br><br>");
-                        writer.append("Hint: This error usually indicates that you choosed the wrong Verisium Manager version at the plugin configuration section for Verisium Manager Version.<br>");
-                        writer.append("If that's the case, and if your Verisium Manager server version is below 19.09 - set Verisium Manager Version as \"html\" (if pipeline dsl is used), or \"Lower than 19.09\" for regular post configuration mode.<br>");
+                        writer.append(
+                                "Hint: This error usually indicates that you choosed the wrong Verisium Manager version at the plugin configuration section for Verisium Manager Version.<br>");
+                        writer.append(
+                                "If that's the case, and if your Verisium Manager server version is below 19.09 - set Verisium Manager Version as \"html\" (if pipeline dsl is used), or \"Lower than 19.09\" for regular post configuration mode.<br>");
                     }
                 }
 
                 writer.append("</strong></p></div></div>");
                 utils.saveFileOnDisk(fileOutput, writer.toString());
-                utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report", launcher,writer.toString());
+                utils.moveFromNodeToMaster(
+                        buildNumber + "." + buildId + ".summary.report", launcher, writer.toString());
                 br.close();
             }
         } catch (Exception e) {
@@ -659,17 +744,20 @@ public class ReportManager {
                     listener.getLogger().println("Failed to retrieve report from the Verisium Manager server.");
 
                     String fileOutput = buildNumber + "." + buildId + ".summary.report";
-                    if (utils.getFilePath() == null){
-                        //Pipeline always run on master
-                        fileOutput = jobWorkingDir + File.separator + fileOutput;            
+                    if (utils.getFilePath() == null) {
+                        // Pipeline always run on master
+                        fileOutput = jobWorkingDir + File.separator + fileOutput;
                     }
                     StringBuffer writer = new StringBuffer();
-                    writer.append("<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/support-icon.png\"></img></p><p>");
-                    writer.append("Failure to retrieve the report from the Verisium Manager server for this build.  Check your parameters.<br>Below you can find the exception that was thrown during the retrieval process:<br><br><strong>");
+                    writer.append(
+                            "<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/support-icon.png\"></img></p><p>");
+                    writer.append(
+                            "Failure to retrieve the report from the Verisium Manager server for this build.  Check your parameters.<br>Below you can find the exception that was thrown during the retrieval process:<br><br><strong>");
                     writer.append(e.getMessage());
                     writer.append("</strong></p></div></div>");
                     utils.saveFileOnDisk(fileOutput, writer.toString());
-                    utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report", launcher,writer.toString());
+                    utils.moveFromNodeToMaster(
+                            buildNumber + "." + buildId + ".summary.report", launcher, writer.toString());
                 }
             }
             throw e;
@@ -680,12 +768,10 @@ public class ReportManager {
             }
         }
     }
-    
-    
 
     public void emailSummaryReport() throws Exception {
 
-        //In case user choose to bring the report manualy skip and return
+        // In case user choose to bring the report manualy skip and return
         if (!summaryReportParams.sendEmail) {
             return;
         }
@@ -709,12 +795,28 @@ public class ReportManager {
         }
 
         try {
-            conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobWorkingDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
+            conn = utils.getVAPIConnection(
+                    apiURL,
+                    vAPIConnectionParam.authRequired,
+                    vAPIConnectionParam.vAPIUser,
+                    vAPIConnectionParam.vAPIPassword,
+                    "POST",
+                    vAPIConnectionParam.dynamicUserId,
+                    buildId,
+                    buildNumber,
+                    jobWorkingDir,
+                    listener,
+                    vAPIConnectionParam.connTimeout,
+                    vAPIConnectionParam.readTimeout,
+                    vAPIConnectionParam.advConfig);
 
             OutputStream os = conn.getOutputStream();
             String postData = buildPostParamForSummaryReport(true);
             if (!this.testMode) {
-                listener.getLogger().println("ReportManager is using the following POST data for sending the summary report email:\n" + postData);
+                listener.getLogger()
+                        .println(
+                                "ReportManager is using the following POST data for sending the summary report email:\n"
+                                        + postData);
             } else {
                 System.out.println(postData);
             }
@@ -724,7 +826,8 @@ public class ReportManager {
 
             if (!checkResponseCode(conn)) {
 
-                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
+                BufferedReader br =
+                        new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
                 String output;
                 StringBuffer sb = new StringBuffer();
@@ -733,7 +836,9 @@ public class ReportManager {
                     sb.append(output);
                 }
                 if (!this.testMode) {
-                    listener.getLogger().println("Failed to send report using the Verisium Manager server.  Exception is:\n" + sb.toString());
+                    listener.getLogger()
+                            .println("Failed to send report using the Verisium Manager server.  Exception is:\n"
+                                    + sb.toString());
                 }
                 br.close();
             } else {
@@ -760,8 +865,11 @@ public class ReportManager {
 
     public String getReportFromWorkspace() {
 
-        String fileInput = vmgrRun.getJobWorkingDir() + File.separator + vmgrRun.getRun().getNumber() + "." + vmgrRun.getRun().getId() + ".summary.report";
-        String output = "<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/weblinks.png\"></img></p><p>Failed to find a report file for this build.<br>Please check that the following file exist:<br>" + fileInput + "</p></div></div>";
+        String fileInput = vmgrRun.getJobWorkingDir() + File.separator
+                + vmgrRun.getRun().getNumber() + "." + vmgrRun.getRun().getId() + ".summary.report";
+        String output =
+                "<div class=\"microAgentWaiting\"><div class=\"spinnerMicroAgentMessage\"><p><img src=\"/plugin/vmanager-plugin/img/weblinks.png\"></img></p><p>Failed to find a report file for this build.<br>Please check that the following file exist:<br>"
+                        + fileInput + "</p></div></div>";
         try {
             output = new String(Files.readAllBytes(Paths.get(fileInput)), StandardCharsets.UTF_8);
         } catch (IOException ex) {
@@ -770,22 +878,30 @@ public class ReportManager {
         }
 
         return output;
-
     }
 
     private boolean checkResponseCode(HttpURLConnection conn) {
         try {
-            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED
-                    && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK
+                    && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT
+                    && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED
+                    && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED
+                    && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL
+                    && conn.getResponseCode() != HttpURLConnection.HTTP_RESET
                     && conn.getResponseCode() != 406) {
-                //System.out.println("Error - Got wrong response from /reports/stream-summary-report - " + conn.getResponseCode()  );
+                // System.out.println("Error - Got wrong response from /reports/stream-summary-report - " +
+                // conn.getResponseCode()  );
                 if ("html".equals(summaryReportParams.vManagerVersion)) {
                     if (!this.testMode) {
-                        listener.getLogger().println("Error - Got wrong response from /reports/generate-summary-report - " + conn.getResponseCode());
+                        listener.getLogger()
+                                .println("Error - Got wrong response from /reports/generate-summary-report - "
+                                        + conn.getResponseCode());
                     }
                 } else {
                     if (!this.testMode) {
-                        listener.getLogger().println("Error - Got wrong response from /reports/stream-summary-report - " + conn.getResponseCode());
+                        listener.getLogger()
+                                .println("Error - Got wrong response from /reports/stream-summary-report - "
+                                        + conn.getResponseCode());
                     }
                 }
                 return false;
@@ -799,13 +915,19 @@ public class ReportManager {
         }
     }
 
-    public CloseableHttpClient fixUntrustCertificate() throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        javax.net.ssl.SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(new TrustSelfSignedStrategy()).build();
-        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create().register("https", socketFactory).build();
+    public CloseableHttpClient fixUntrustCertificate()
+            throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        javax.net.ssl.SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial(new TrustSelfSignedStrategy())
+                .build();
+        SSLConnectionSocketFactory socketFactory =
+                new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("https", socketFactory)
+                .build();
         HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(reg);
-        CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(cm).build();
+        CloseableHttpClient httpClient =
+                HttpClients.custom().setConnectionManager(cm).build();
         return httpClient;
     }
-
 }

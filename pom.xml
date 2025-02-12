@@ -1,32 +1,31 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.6</version> 
+    <version>5.6</version>
     <relativePath />
   </parent>
 
   <artifactId>vmanager-plugin</artifactId>
   <version>3.2.1.8-SNAPSHOT</version>
   <packaging>hpi</packaging>
+  <name>Cadence vManager Plugin for Jenkins</name>
   <description>Integrates Jenkins to Cadence vManager</description>
   <url>https://github.com/jenkinsci/vmanager-plugin</url>
+
+  <organization>
+    <name>Cadence</name>
+    <url>www.cadence.com</url>
+  </organization>
   <licenses>
     <license>
       <name>MIT License</name>
       <url>http://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
-  
-  <properties>
-    <findbugs.failOnError>false</findbugs.failOnError>
-    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.479</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
-  </properties>
-  
+
   <developers>
     <developer>
       <id>tyanai</id>
@@ -34,13 +33,20 @@
       <email>tyanai@cadence.com</email>
     </developer>
   </developers>
-  
+
   <scm>
     <connection>scm:git:https://github.com/jenkinsci/vmanager-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/vmanager-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/vmanager-plugin</url>
     <tag>vmanager-plugin-3.1.9</tag>
+    <url>https://github.com/jenkinsci/vmanager-plugin</url>
   </scm>
+
+  <properties>
+    <findbugs.failOnError>false</findbugs.failOnError>
+    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -52,7 +58,43 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
+  <dependencies>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>apache-httpcomponents-client-4-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>dashboard-view</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.main</groupId>
+          <artifactId>maven-plugin</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>token-macro</artifactId>
+    </dependency>
+    <!-- dependencies on Jenkins Pipeline plugins -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+    </dependency>
+  </dependencies>
+
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
@@ -67,50 +109,7 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-  
-  <dependencies>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>dashboard-view</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jenkins-ci.main</groupId>
-          <artifactId>maven-plugin</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials</artifactId>
-    </dependency>
-
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>token-macro</artifactId>
-    </dependency>
-    <!-- dependencies on Jenkins Pipeline plugins -->
-    <dependency>
-	<groupId>org.jenkins-ci.plugins.workflow</groupId>
-	<artifactId>workflow-step-api</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>com.googlecode.json-simple</groupId>
-        <artifactId>json-simple</artifactId>
-        <version>1.1.1</version>
-    </dependency>
-	<dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>apache-httpcomponents-client-4-api</artifactId>
-    </dependency>
-  </dependencies>
- 
-  <organization>
-  	<name>Cadence</name>
-  	<url>www.cadence.com</url>
-  </organization>
-  <name>Cadence vManager Plugin for Jenkins</name>
-    <!--build>
+  <!--build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

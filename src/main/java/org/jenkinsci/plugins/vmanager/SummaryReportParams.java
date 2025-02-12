@@ -28,7 +28,7 @@ package org.jenkinsci.plugins.vmanager;
  * @author tyanai
  */
 public class SummaryReportParams {
-    
+
     public boolean runReport;
     public boolean metricsReport;
     public boolean vPlanReport;
@@ -38,7 +38,7 @@ public class SummaryReportParams {
     public int testsDepth = 6;
     public int metricsDepth = 6;
     public int vPlanDepth = 6;
-    
+
     public String metricsInputType;
     public String metricsAdvanceInput;
     public String vPlanInputType;
@@ -53,16 +53,17 @@ public class SummaryReportParams {
     public boolean sendEmail;
     public String emailList;
     public String summaryMode;
-    
+
     public String emailType;
-    public String emailInputFile; 
+    public String emailInputFile;
     public boolean deleteEmailInputFile;
     public boolean ignoreSSLError;
-    
-    
-    public final static String  staticReportParams = "$jenkins_mode\"override\":true,\"sessionsViewName\":\"All_Sessions\",\"linkOutput\":$link_output,\"title\":\"Summary report\",\"includeSessions\":true,\"includeAll\":false$test_view_name$metrics_view_name$vplan_view_name$test_depth";
+
+    public static final String staticReportParams =
+            "$jenkins_mode\"override\":true,\"sessionsViewName\":\"All_Sessions\",\"linkOutput\":$link_output,\"title\":\"Summary report\",\"includeSessions\":true,\"includeAll\":false$test_view_name$metrics_view_name$vplan_view_name$test_depth";
     public boolean includeTests = true;
-    public static String metricsData = "{\"scope\":\"default\",\"extended\":false,\"instances\":true,\"types\":true,\"depth\":6}";
+    public static String metricsData =
+            "{\"scope\":\"default\",\"extended\":false,\"instances\":true,\"types\":true,\"depth\":6}";
     public static String vPlanData = "{\"extended\":true,\"instances\":true,\"types\":true,\"depth\":6}";
     public static String ctxData = "{}";
 }

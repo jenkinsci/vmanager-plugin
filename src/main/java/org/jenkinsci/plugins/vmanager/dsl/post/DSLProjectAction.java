@@ -3,23 +3,19 @@ package org.jenkinsci.plugins.vmanager.dsl.post;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
-
 import java.io.File;
 import java.io.Serial;
 import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jenkinsci.plugins.vmanager.PostActionBase;
 import org.jenkinsci.plugins.vmanager.VMGRRun;
-
 
 public class DSLProjectAction extends PostActionBase implements Serializable, Action {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private transient Job<?, ?> project;
+    private final transient Job<?, ?> project;
 
     @Override
     public String getIconFileName() {
@@ -57,9 +53,9 @@ public class DSLProjectAction extends PostActionBase implements Serializable, Ac
 
         List<? extends Run<?, ?>> builds = project.getBuilds();
         final Class<DSLBuildAction> buildClass = DSLBuildAction.class;
-        VMGRRun tmpVMGRRun = null;
-        Job job = null;
-        String workingDir = null;
+        VMGRRun tmpVMGRRun;
+        Job job;
+        String workingDir;
         int counter = 0;
         for (Run<?, ?> currentBuild : builds) {
             if (counter == PostActionBase.numberOfBuilds) break;
@@ -67,7 +63,8 @@ public class DSLProjectAction extends PostActionBase implements Serializable, Ac
             if (action != null) {
                 job = currentBuild.getParent();
                 workingDir = job.getBuildDir().getAbsolutePath() + File.separator + currentBuild.getNumber();
-                tmpVMGRRun = new VMGRRun(currentBuild, workingDir, job.getBuildDir().getAbsolutePath());
+                tmpVMGRRun =
+                        new VMGRRun(currentBuild, workingDir, job.getBuildDir().getAbsolutePath());
                 recentBuilds.add(tmpVMGRRun);
                 counter++;
             }
@@ -79,6 +76,4 @@ public class DSLProjectAction extends PostActionBase implements Serializable, Ac
     DSLProjectAction(final Job<?, ?> project) {
         this.project = project;
     }
-
-
 }
