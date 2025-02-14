@@ -32,14 +32,12 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.Set;
 import javax.annotation.Nonnull;
-import jakarta.servlet.ServletException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.vmanager.Utils;
-//import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-//import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -99,10 +97,44 @@ public class VMGRPostLaunchStep extends Step {
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public VMGRPostLaunchStep(String vAPIUrl, String vAPIUser, String vAPIPassword, boolean authRequired, boolean advConfig, boolean dynamicUserId, int connTimeout, int readTimeout, boolean advancedFunctions,
-            boolean retrieveSummaryReport, boolean runReport, boolean metricsReport, boolean vPlanReport, String testsViewName, String metricsViewName, String vplanViewName, int testsDepth, int metricsDepth,
-            int vPlanDepth, String metricsInputType, String metricsAdvanceInput, String vPlanInputType, String vPlanAdvanceInput, String vPlanxFileName, String summaryType, boolean ctxInput,
-            String ctxAdvanceInput, String freeVAPISyntax, boolean deleteReportSyntaxInputFile, String vManagerVersion, boolean sendEmail, String emailList, String emailType, String emailInputFile, boolean deleteEmailInputFile, String summaryMode, boolean ignoreSSLError) {
+    public VMGRPostLaunchStep(
+            String vAPIUrl,
+            String vAPIUser,
+            String vAPIPassword,
+            boolean authRequired,
+            boolean advConfig,
+            boolean dynamicUserId,
+            int connTimeout,
+            int readTimeout,
+            boolean advancedFunctions,
+            boolean retrieveSummaryReport,
+            boolean runReport,
+            boolean metricsReport,
+            boolean vPlanReport,
+            String testsViewName,
+            String metricsViewName,
+            String vplanViewName,
+            int testsDepth,
+            int metricsDepth,
+            int vPlanDepth,
+            String metricsInputType,
+            String metricsAdvanceInput,
+            String vPlanInputType,
+            String vPlanAdvanceInput,
+            String vPlanxFileName,
+            String summaryType,
+            boolean ctxInput,
+            String ctxAdvanceInput,
+            String freeVAPISyntax,
+            boolean deleteReportSyntaxInputFile,
+            String vManagerVersion,
+            boolean sendEmail,
+            String emailList,
+            String emailType,
+            String emailInputFile,
+            boolean deleteEmailInputFile,
+            String summaryMode,
+            boolean ignoreSSLError) {
 
         this.vAPIUrl = vAPIUrl;
         this.authRequired = authRequired;
@@ -143,7 +175,6 @@ public class VMGRPostLaunchStep extends Step {
         this.deleteEmailInputFile = deleteEmailInputFile;
         this.summaryMode = summaryMode;
         this.ignoreSSLError = ignoreSSLError;
-
     }
 
     public String getSummaryMode() {
@@ -329,9 +360,12 @@ public class VMGRPostLaunchStep extends Step {
             return ImmutableSet.of(FilePath.class, Run.class, Launcher.class, TaskListener.class, EnvVars.class);
         }
 
-        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired) throws IOException,
-                ServletException {
+        public FormValidation doTestConnection(
+                @QueryParameter("vAPIUser") final String vAPIUser,
+                @QueryParameter("vAPIPassword") final String vAPIPassword,
+                @QueryParameter("vAPIUrl") final String vAPIUrl,
+                @QueryParameter("authRequired") final boolean authRequired)
+                throws IOException, ServletException {
             try {
 
                 Utils utils = new Utils();

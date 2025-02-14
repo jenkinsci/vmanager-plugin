@@ -35,6 +35,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.List;
@@ -58,7 +59,14 @@ public class VMGRBuildArchiver {
     private String famMode;
     private String famModeLocation;
 
-    public VMGRBuildArchiver(boolean vMGRBuildArchive, boolean deleteAlsoSessionDirectory, boolean genericCredentialForSessionDelete, String archiveUser, String archivePassword, String famMode, String famModeLocation) {
+    public VMGRBuildArchiver(
+            boolean vMGRBuildArchive,
+            boolean deleteAlsoSessionDirectory,
+            boolean genericCredentialForSessionDelete,
+            String archiveUser,
+            String archivePassword,
+            String famMode,
+            String famModeLocation) {
         this.archiveUser = archiveUser;
         this.archivePassword = archivePassword;
         this.vMGRBuildArchive = vMGRBuildArchive;
@@ -68,15 +76,14 @@ public class VMGRBuildArchiver {
         this.famModeLocation = famModeLocation;
     }
 
-    public VMGRBuildArchiver() {
-    }
+    public VMGRBuildArchiver() {}
 
     public boolean isVMGRBuildArchive() {
         return vMGRBuildArchive;
     }
 
     public void setVMGRBuildArchive(boolean isVMGRBuildArchive) {
-        this.vMGRBuildArchive = vMGRBuildArchive;
+        this.vMGRBuildArchive = isVMGRBuildArchive;
     }
 
     public String getArchiveUser() {
@@ -111,9 +118,19 @@ public class VMGRBuildArchiver {
         this.genericCredentialForSessionDelete = genericCredentialForSessionDelete;
     }
 
-    public void markBuildForArchive(List<String> listOfSessions, String apiURL, boolean requireAuth, String userUsedForLogin, String passwordUsedForLogin, String workingJobDir, TaskListener listener, Launcher launcher, Utils utils) throws InterruptedException {
+    public void markBuildForArchive(
+            List<String> listOfSessions,
+            String apiURL,
+            boolean requireAuth,
+            String userUsedForLogin,
+            String passwordUsedForLogin,
+            String workingJobDir,
+            TaskListener listener,
+            Launcher launcher,
+            Utils utils)
+            throws InterruptedException {
 
-        //Build a string from listOfSessions
+        // Build a string from listOfSessions
         String sessions = null;
         Iterator<String> iter = listOfSessions.iterator();
         while (iter.hasNext()) {
@@ -124,11 +141,11 @@ public class VMGRBuildArchiver {
             }
         }
 
-        //Save the data into sdi.properties
+        // Save the data into sdi.properties
         String fileOutput = "sdi.properties";
-        if (utils.getFilePath() == null){
-             //Pipeline always run on master
-             fileOutput = workingJobDir + File.separator + fileOutput;            
+        if (utils.getFilePath() == null) {
+            // Pipeline always run on master
+            fileOutput = workingJobDir + File.separator + fileOutput;
         }
         StringBuffer writer;
         try {
@@ -153,21 +170,18 @@ public class VMGRBuildArchiver {
             }
             writer.append("sessions=" + sessions + "\n");
             utils.saveFileOnDisk(fileOutput, writer.toString());
-            utils.moveFromNodeToMaster(fileOutput, launcher,writer.toString());
-            
+            utils.moveFromNodeToMaster(fileOutput, launcher, writer.toString());
 
         } catch (IOException ex) {
             ex.printStackTrace();
             listener.getLogger().print("ERROR - Failed to create sdi.properties file on " + fileOutput);
             listener.getLogger().print(ex.getMessage());
-
         }
-
     }
 
     public void deleteSessions(Run run, Logger logger) throws Exception {
 
-        //First check if dsi file exist:
+        // First check if dsi file exist:
         File tmpFile = new File(run.getRootDir().getPath() + File.separator + "sdi.properties");
         if (!tmpFile.exists()) {
             return;
@@ -175,33 +189,45 @@ public class VMGRBuildArchiver {
             Properties buildSdi = loadProperties(run.getRootDir().getPath(), logger);
             if ("true".equals(buildSdi.getProperty("famMode"))) {
                 long timeInMs = System.currentTimeMillis();
-                File destFile = new File(buildSdi.getProperty("famModeLocation").trim() + File.separator + run.getNumber() + "-" + timeInMs + "-sdi.properties");
-                
-                Files.copy( tmpFile.toPath(), destFile.toPath() );
-                
+                File destFile = new File(buildSdi.getProperty("famModeLocation").trim() + File.separator
+                        + run.getNumber() + "-" + timeInMs + "-sdi.properties");
+
+                Files.copy(tmpFile.toPath(), destFile.toPath());
 
             } else {
 
                 String apiUrl = null;
-                String userCredentials = buildSdi.getProperty("archiveUser").trim() + ":" + buildSdi.getProperty("archivePassword").trim();
+                String userCredentials = buildSdi.getProperty("archiveUser").trim() + ":"
+                        + buildSdi.getProperty("archivePassword").trim();
                 boolean requireAuth = true;
                 if ("false".equals(buildSdi.getProperty("requireAuth").trim())) {
                     requireAuth = false;
                 }
 
-                //If this is a dedicted user, need to update the session's owner belfore trying to delete it:
-                if ("true".equals(buildSdi.getProperty("genericCredentialForSessionDelete").trim())) {
-                    String updateSessionOwner = "{\"update\":{\"owner\":\"" + buildSdi.getProperty("archiveUser").trim() + "\"},\"rs\":{\"filter\":{\"@c\":\".InFilter\",\"attName\":\"id\",\"operand\":\"IN\",\"values\":[" + buildSdi.getProperty("sessions") + "]}}}";
+                // If this is a dedicted user, need to update the session's owner belfore trying to delete it:
+                if ("true"
+                        .equals(buildSdi.getProperty("genericCredentialForSessionDelete")
+                                .trim())) {
+                    String updateSessionOwner = "{\"update\":{\"owner\":\""
+                            + buildSdi.getProperty("archiveUser").trim()
+                            + "\"},\"rs\":{\"filter\":{\"@c\":\".InFilter\",\"attName\":\"id\",\"operand\":\"IN\",\"values\":["
+                            + buildSdi.getProperty("sessions") + "]}}}";
                     apiUrl = buildSdi.getProperty("url").trim();
                     apiUrl = apiUrl + "update";
                     HttpURLConnection conn = getVAPIConnection(apiUrl, requireAuth, userCredentials);
                     OutputStream os = conn.getOutputStream();
-                    os.write(updateSessionOwner.getBytes());
+                    os.write(updateSessionOwner.getBytes(StandardCharsets.UTF_8));
                     os.flush();
-                    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
+                    if (conn.getResponseCode() != HttpURLConnection.HTTP_OK
+                            && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT
+                            && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED
+                            && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED
+                            && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL
+                            && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
                         String reason = "";
                         if (conn.getResponseCode() == 503) {
-                            reason = "Failed to delete sessions.  vAPI process failed to connect to remote Verisium Manager server.";
+                            reason =
+                                    "Failed to delete sessions.  vAPI process failed to connect to remote Verisium Manager server.";
                         }
                         if (conn.getResponseCode() == 401) {
                             reason = "Failed to delete sessions.  Authentication Error";
@@ -211,7 +237,6 @@ public class VMGRBuildArchiver {
                         }
                         logger.log(Level.SEVERE, reason);
                         processErrorFromRespone(conn, logger);
-
                     }
                     conn.disconnect();
                 }
@@ -220,14 +245,24 @@ public class VMGRBuildArchiver {
                 apiUrl = apiUrl + "delete";
                 HttpURLConnection conn = getVAPIConnection(apiUrl, requireAuth, userCredentials);
                 OutputStream os = conn.getOutputStream();
-                String input = "{\"rs\":{\"filter\":{\"@c\":\".InFilter\",\"attName\":\"id\",\"operand\":\"IN\",\"values\":[" + buildSdi.getProperty("sessions") + "]}},\"with-session-dir\":" + buildSdi.getProperty("deleteAlsoSessionDirectory").trim() + "}";
-                os.write(input.getBytes());
+                String input =
+                        "{\"rs\":{\"filter\":{\"@c\":\".InFilter\",\"attName\":\"id\",\"operand\":\"IN\",\"values\":["
+                                + buildSdi.getProperty("sessions") + "]}},\"with-session-dir\":"
+                                + buildSdi.getProperty("deleteAlsoSessionDirectory")
+                                        .trim() + "}";
+                os.write(input.getBytes(StandardCharsets.UTF_8));
                 os.flush();
 
-                if (conn.getResponseCode() != HttpURLConnection.HTTP_OK && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
+                if (conn.getResponseCode() != HttpURLConnection.HTTP_OK
+                        && conn.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT
+                        && conn.getResponseCode() != HttpURLConnection.HTTP_ACCEPTED
+                        && conn.getResponseCode() != HttpURLConnection.HTTP_CREATED
+                        && conn.getResponseCode() != HttpURLConnection.HTTP_PARTIAL
+                        && conn.getResponseCode() != HttpURLConnection.HTTP_RESET) {
                     String reason = "";
                     if (conn.getResponseCode() == 503) {
-                        reason = "Failed to delete sessions.  vAPI process failed to connect to remote Verisium Manager server.";
+                        reason =
+                                "Failed to delete sessions.  vAPI process failed to connect to remote Verisium Manager server.";
                     }
                     if (conn.getResponseCode() == 401) {
                         reason = "Failed to delete sessions.  Authentication Error";
@@ -239,23 +274,25 @@ public class VMGRBuildArchiver {
                     processErrorFromRespone(conn, logger);
 
                 } else {
-                    logger.log(Level.INFO, "Sessions " + buildSdi.getProperty("sessions") + "were deleted from Verisium Manager DB");
+                    logger.log(
+                            Level.INFO,
+                            "Sessions " + buildSdi.getProperty("sessions") + "were deleted from Verisium Manager DB");
                 }
 
                 conn.disconnect();
             }
         }
-
     }
 
     public void processErrorFromRespone(HttpURLConnection conn, Logger logger) {
         String errorMessage = "";
         StringBuilder resultFromError = null;
         int responseCode = 0;
+        BufferedReader br = null;
         try {
             resultFromError = new StringBuilder(conn.getResponseMessage());
             responseCode = conn.getResponseCode();
-            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
+            br = new BufferedReader(new InputStreamReader((conn.getErrorStream()), StandardCharsets.UTF_8));
 
             String output;
             while ((output = br.readLine()) != null) {
@@ -264,10 +301,16 @@ public class VMGRBuildArchiver {
         } catch (Exception e) {
 
         } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             errorMessage = "Failed : HTTP error code : " + responseCode + " (" + resultFromError + ")\n";
 
             logger.log(Level.SEVERE, errorMessage);
-
         }
     }
 
@@ -282,7 +325,10 @@ public class VMGRBuildArchiver {
             prop.load(input);
 
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, "Failed to read " + path + File.separator + "sdi.properties during delete of session operation", ex);
+            logger.log(
+                    Level.SEVERE,
+                    "Failed to read " + path + File.separator + "sdi.properties during delete of session operation",
+                    ex);
             throw ex;
         } finally {
             if (input != null) {
@@ -319,13 +365,12 @@ public class VMGRBuildArchiver {
             // Authentication
             // ----------------------------------------------------------------------------------------
 
-            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-            String authStringEnc = new String(authEncBytes);
+            byte[] authEncBytes = Base64.encodeBase64(authString.getBytes(StandardCharsets.UTF_8));
+            String authStringEnc = new String(authEncBytes, StandardCharsets.UTF_8);
             conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
             // ----------------------------------------------------------------------------------------
         }
 
         return conn;
     }
-
 }

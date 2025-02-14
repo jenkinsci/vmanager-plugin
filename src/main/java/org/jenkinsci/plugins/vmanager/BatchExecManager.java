@@ -40,7 +40,13 @@ public class BatchExecManager implements java.io.Serializable {
     String buildId = null;
     int buildNumber = 0;
 
-    public BatchExecManager(TaskListener listener, String executionScript, String executionShellLocation, String executionVsifFile, String buildId, int buildNumber) {
+    public BatchExecManager(
+            TaskListener listener,
+            String executionScript,
+            String executionShellLocation,
+            String executionVsifFile,
+            String buildId,
+            int buildNumber) {
         this.jobListener = listener;
         this.executionScript = executionScript;
         this.executionShellLocation = executionShellLocation;
@@ -53,8 +59,14 @@ public class BatchExecManager implements java.io.Serializable {
 
         String[] command = {executionShellLocation, executionScript, vsifFile};
 
-        filePath.act(new InvokeExecutionTask( jobListener,  executionScript,  executionShellLocation,  vsifFile,  buildId,  buildNumber, command,  filePath)); 
-
+        filePath.act(new InvokeExecutionTask(
+                jobListener,
+                executionScript,
+                executionShellLocation,
+                vsifFile,
+                buildId,
+                buildNumber,
+                command,
+                filePath));
     }
-
 }

@@ -7,13 +7,16 @@ public class JUnitRequestHolder {
     private String staticAttributeList;
     private boolean noAppendSeed;
 
-    public JUnitRequestHolder(boolean generateJUnitXML, boolean extraAttributesForFailures, String staticAttributeList, boolean noAppendSeed) {
+    public JUnitRequestHolder(
+            boolean generateJUnitXML,
+            boolean extraAttributesForFailures,
+            String staticAttributeList,
+            boolean noAppendSeed) {
         super();
         this.generateJUnitXML = generateJUnitXML;
         this.extraAttributesForFailures = extraAttributesForFailures;
         this.staticAttributeList = staticAttributeList;
         this.noAppendSeed = noAppendSeed;
-
     }
 
     public boolean isNoAppendSeed() {
@@ -47,5 +50,4 @@ public class JUnitRequestHolder {
     public void setStaticAttributeList(String staticAttributeList) {
         this.staticAttributeList = staticAttributeList;
     }
-
 }

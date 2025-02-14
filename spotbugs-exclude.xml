@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<FindBugsFilter>
+    <Match>
+        <Bug pattern="DM_BOXED_PRIMITIVE_FOR_PARSING"/>
+        <Class name="org.jenkinsci.plugins.vmanager.LaunchHolder"/>
+        <Method name="performWaiting"/>
+    </Match>
+    <Match>
+        <Bug pattern="DM_STRING_CTOR"/>
+        <Class name="org.jenkinsci.plugins.vmanager.LaunchHolder"/>
+        <Method name="performWaiting"/>
+    </Match>
+    <Match>
+        <Bug pattern="SBSC_USE_STRINGBUFFER_CONCATENATION"/>
+        <Class name="org.jenkinsci.plugins.vmanager.LaunchHolder"/>
+        <Method name="performWaiting"/>
+    </Match>
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="org.jenkinsci.plugins.vmanager.ReportManager"/>
+        <Method name="buildPostParamForSummaryReport"/>
+    </Match>
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="org.jenkinsci.plugins.vmanager.ReportManager"/>
+        <Method name="buildPostParamForSummaryReport"/>
+    </Match>
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="org.jenkinsci.plugins.vmanager.ReportManager"/>
+        <Method name="buildPostParamForSummaryReport"/>
+    </Match>
+    <Match>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+        <Class name="org.jenkinsci.plugins.vmanager.ReportManager"/>
+        <Method name="buildPostParamForSummaryReport"/>
+    </Match>
+    <Match>
+        <Bug pattern="NP_NULL_PARAM_DEREF"/>
+        <Class name="org.jenkinsci.plugins.vmanager.SessionStatusHolder"/>
+        <Method name="dumpSessionStatus"/>
+    </Match>
+    <Match>
+        <Bug pattern="REC_CATCH_EXCEPTION"/>
+        <Class name="org.jenkinsci.plugins.vmanager.SessionStatusHolder"/>
+        <Method name="writeSessionIntoFile"/>
+    </Match>
+    <Match>
+        <Bug pattern="URF_UNREAD_FIELD"/>
+        <Class name="org.jenkinsci.plugins.vmanager.SessionStatusHolder"/>
+        <Field name="notInTestMode"/>
+    </Match>
+    <Match>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+        <Class name="org.jenkinsci.plugins.vmanager.SummaryReportParams"/>
+        <Field name="ctxData"/>
+    </Match>
+    <Match>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+        <Class name="org.jenkinsci.plugins.vmanager.SummaryReportParams"/>
+        <Field name="metricsData"/>
+    </Match>
+    <Match>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+        <Class name="org.jenkinsci.plugins.vmanager.SummaryReportParams"/>
+        <Field name="vPlanData"/>
+    </Match>
+    <Match>
+        <Bug pattern="DM_BOXED_PRIMITIVE_FOR_PARSING"/>
+        <Class name="org.jenkinsci.plugins.vmanager.UnitTestFormatter"/>
+        <Method name="dumpXMLFile"/>
+    </Match>
+    <Match>
+        <Bug pattern="URF_UNREAD_FIELD"/>
+        <Class name="org.jenkinsci.plugins.vmanager.UnitTestFormatter"/>
+        <Field name="sessionId"/>
+    </Match>
+</FindBugsFilter>

@@ -38,7 +38,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
  *
  * @author tyanai
  */
-public class InvokeExecutionTask extends  MasterToSlaveFileCallable<Void> implements java.io.Serializable{
+public class InvokeExecutionTask extends MasterToSlaveFileCallable<Void> implements java.io.Serializable {
 
     TaskListener jobListener = null;
     String executionScript = null;
@@ -48,8 +48,16 @@ public class InvokeExecutionTask extends  MasterToSlaveFileCallable<Void> implem
     int buildNumber = 0;
     String[] command;
     FilePath filePath = null;
-    
-    public InvokeExecutionTask(TaskListener listener, String executionScript, String executionShellLocation, String executionVsifFile, String buildId, int buildNumber, String[] command, FilePath filePath){
+
+    public InvokeExecutionTask(
+            TaskListener listener,
+            String executionScript,
+            String executionShellLocation,
+            String executionVsifFile,
+            String buildId,
+            int buildNumber,
+            String[] command,
+            FilePath filePath) {
         this.jobListener = listener;
         this.executionScript = executionScript;
         this.executionShellLocation = executionShellLocation;
@@ -59,86 +67,84 @@ public class InvokeExecutionTask extends  MasterToSlaveFileCallable<Void> implem
         this.command = command;
         this.filePath = filePath;
     }
-    
-    
+
     @Override
     public Void invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
         String sessionNameToMonitor = null;
-                jobListener.getLogger().print("\nTrying to launch a session using batch on this agent workspace:\n");
-                jobListener.getLogger().print("Select script for this execution is " + executionScript + "\n");
-                jobListener.getLogger().print("Select shell type for this execution is " + executionShellLocation + "\n");
-                jobListener.getLogger().print("Select vsif for this execution is " + vsifFile + "\n");
-                boolean foundGoodVSIF = false;
-                try {
-                    
-                    /*
-                    Launcher.ProcStarter ps = launcher.new ProcStarter();
-                    ps.cmds(command).readStdout(); 
-                    
-                    Proc proc = launcher.launch(ps);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(proc.getStdout()));
-                    BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getStderr()));
-                    */
-                    
-                    ProcessBuilder builder = new ProcessBuilder(command);
-                    builder.redirectErrorStream(true);
-                    Process proc = builder.start();
-                    BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-                    BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
-                    
-                    String s = null;
+        jobListener.getLogger().print("\nTrying to launch a session using batch on this agent workspace:\n");
+        jobListener.getLogger().print("Select script for this execution is " + executionScript + "\n");
+        jobListener.getLogger().print("Select shell type for this execution is " + executionShellLocation + "\n");
+        jobListener.getLogger().print("Select vsif for this execution is " + vsifFile + "\n");
+        boolean foundGoodVSIF = false;
+        try {
 
-                    while ((s = in.readLine()) != null) {
+            /*
+            Launcher.ProcStarter ps = launcher.new ProcStarter();
+            ps.cmds(command).readStdout();
 
-                        jobListener.getLogger().print(s + "\n");
-                        if (s.indexOf("*I,runner.sessionStarted: Session") > -1) {
-                            foundGoodVSIF = true;
-                            sessionNameToMonitor = s.substring(34, s.indexOf(" started."));
+            Proc proc = launcher.launch(ps);
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getStdout()));
+            BufferedReader inError = new BufferedReader(new InputStreamReader(proc.getStderr()));
+            */
 
-                            //Now creates the file of sessions.input
-                            String fileOutput = buildNumber + "." + buildId + ".sessions.input";
-                            StringBuffer writer = new StringBuffer();
-                            writer.append(sessionNameToMonitor);
-                            hudson.FilePath newFile = filePath.child(fileOutput);
-                            newFile.write(writer.toString(), StandardCharsets.UTF_8.name());
-                            
-                        }
+            ProcessBuilder builder = new ProcessBuilder(command);
+            builder.redirectErrorStream(true);
+            Process proc = builder.start();
+            BufferedReader in =
+                    new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8));
+            BufferedReader inError =
+                    new BufferedReader(new InputStreamReader(proc.getErrorStream(), StandardCharsets.UTF_8));
 
-                    }
+            String s = null;
 
-                    String sError = null;
+            while ((s = in.readLine()) != null) {
 
-                    while ((sError = inError.readLine()) != null) {
+                jobListener.getLogger().print(s + "\n");
+                if (s.indexOf("*I,runner.sessionStarted: Session") > -1) {
+                    foundGoodVSIF = true;
+                    sessionNameToMonitor = s.substring(34, s.indexOf(" started."));
 
-                        jobListener.getLogger().print(sError + "\n");
-
-                    }
-
-                } catch (IOException e) {
-                    jobListener.getLogger().println(e.getMessage());
-                    for (StackTraceElement ste : e.getStackTrace()) {
-                        jobListener.getLogger().println(" " + ste);
-                    }
-
-                    jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(e));
+                    // Now creates the file of sessions.input
+                    String fileOutput = buildNumber + "." + buildId + ".sessions.input";
+                    StringBuffer writer = new StringBuffer();
+                    writer.append(sessionNameToMonitor);
+                    hudson.FilePath newFile = filePath.child(fileOutput);
+                    newFile.write(writer.toString(), StandardCharsets.UTF_8.name());
                 }
-                catch (InterruptedException ex) {
-                        jobListener.getLogger().println(ex.getMessage());
-                        for (StackTraceElement ste : ex.getStackTrace()) {
-                            jobListener.getLogger().println(" " + ste);
-                        }
+            }
 
-                        jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(ex));
-                    }
-               
+            String sError = null;
 
-                if (foundGoodVSIF) {
-                    jobListener.getLogger().print("Found session name to monitor: " + sessionNameToMonitor + "\n");
-                } else {
-                    throw new IOException("Failed to launch vsif using batch.  Job stopped.");
-                }
+            while ((sError = inError.readLine()) != null) {
 
-                return null;
+                jobListener.getLogger().print(sError + "\n");
+            }
+
+            in.close();
+            inError.close();
+
+        } catch (IOException e) {
+            jobListener.getLogger().println(e.getMessage());
+            for (StackTraceElement ste : e.getStackTrace()) {
+                jobListener.getLogger().println(" " + ste);
+            }
+
+            jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(e));
+        } catch (InterruptedException ex) {
+            jobListener.getLogger().println(ex.getMessage());
+            for (StackTraceElement ste : ex.getStackTrace()) {
+                jobListener.getLogger().println(" " + ste);
+            }
+
+            jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(ex));
+        }
+
+        if (foundGoodVSIF) {
+            jobListener.getLogger().print("Found session name to monitor: " + sessionNameToMonitor + "\n");
+        } else {
+            throw new IOException("Failed to launch vsif using batch.  Job stopped.");
+        }
+
+        return null;
     }
-    
 }

@@ -32,12 +32,12 @@ import javax.annotation.Nonnull;
  * @author tyanai
  */
 public class VMGRRun {
-    
+
     private Run run = null;
     private String jobWorkingDir = null;
     private String generalWorkingDir = null;
-    
-    public VMGRRun(Run run, String jobWorkingDir, String generalWorkingDir){
+
+    public VMGRRun(Run run, String jobWorkingDir, String generalWorkingDir) {
         this.run = run;
         this.jobWorkingDir = jobWorkingDir;
         this.generalWorkingDir = generalWorkingDir;
@@ -50,7 +50,7 @@ public class VMGRRun {
     public String getJobWorkingDir() {
         return jobWorkingDir;
     }
-    
+
     public String getGeneralWorkingDir() {
         return generalWorkingDir;
     }
@@ -66,18 +66,14 @@ public class VMGRRun {
     public void setGeneralWorkingDir(String generalWorkingDir) {
         this.generalWorkingDir = generalWorkingDir;
     }
-    
-    
-    
+
     public static final Comparator<VMGRRun> ORDER_BY_DATE = new Comparator<VMGRRun>() {
         public int compare(@Nonnull VMGRRun lhs, @Nonnull VMGRRun rhs) {
             long lt = lhs.run.getTimeInMillis();
             long rt = rhs.run.getTimeInMillis();
-            if(lt>rt)   return -1;
-            if(lt<rt)   return 1;
+            if (lt > rt) return -1;
+            if (lt < rt) return 1;
             return 0;
         }
     };
-    
-    
 }
