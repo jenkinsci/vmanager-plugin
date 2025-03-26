@@ -9,6 +9,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
+
 import java.io.IOException;
 
 import jakarta.servlet.ServletException;
@@ -24,7 +26,6 @@ public class VMGRAPI extends Builder {
 	private final String vAPIUrl;
 	private final boolean authRequired;
 	private final String vAPIUser;
-	private final String vAPIPassword;
 	private final String vAPIInput;
 	private final String vJsonInputFile;
 	private final boolean deleteInputFile;
@@ -45,7 +46,12 @@ public class VMGRAPI extends Builder {
 			boolean dynamicUserId, String apiUrl, String requestMethod, boolean advConfig, int connTimeout, int readTimeout) {
 		this.vAPIUrl = vAPIUrl;
 		this.vAPIUser = vAPIUser;
-		this.vAPIPassword = vAPIPassword;
+
+		//Store password, only if not empty
+        if (!"".equals(vAPIPassword.trim())){
+            ((VMGRAPI.DescriptorImpl)getDescriptor()).setVAPIPassword(Secret.fromString(vAPIPassword));
+        }
+
 		this.vAPIInput = vAPIInput;
 		this.vJsonInputFile = vJsonInputFile;
 		this.authRequired = authRequired;
@@ -75,10 +81,6 @@ public class VMGRAPI extends Builder {
 
 	public String getVAPIUser() {
 		return vAPIUser;
-	}
-
-	public String getVAPIPassword() {
-		return vAPIPassword;
 	}
 
 	public String getVAPIInput() {
@@ -134,6 +136,13 @@ public class VMGRAPI extends Builder {
 
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+
+		String vAPIPassword = "";
+        if ( ((VMGRAPI.DescriptorImpl)getDescriptor()).getVAPIPassword() != null){
+            vAPIPassword = ((VMGRAPI.DescriptorImpl)getDescriptor()).getVAPIPassword().getPlainText();
+        } else {
+            listener.getLogger().println("Warning - no password supplied for vManager vAPI Job.");
+        }
 
 		listener.getLogger().println("The HOST for vAPI is: " + vAPIUrl);
 		listener.getLogger().println("The vAPIUser for vAPI is: " + vAPIUser);
@@ -222,7 +231,18 @@ public class VMGRAPI extends Builder {
 		/**
 		 * To persist global configuration information, simply store it in a
 		 * field and call save().
-		 * 
+		 */
+
+		private Secret vAPIPassword;
+				
+		public void setVAPIPassword(Secret vAPIPassword) {
+			this.vAPIPassword = vAPIPassword;
+			save();
+		}
+	
+		public Secret getVAPIPassword() { 
+			return vAPIPassword;
+		}
 		
 
 		/**
