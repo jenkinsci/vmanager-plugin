@@ -58,7 +58,7 @@ public class VMGRLaunch extends Builder {
     private final String vsifType;
     private final String userFarmType;
     private final String envSourceInputFile;
-    //private Secret vAPIPassword;
+    private final Secret vAPIPassword;
     private int connTimeout = 1;
     private int readTimeout = 30;
     private final boolean envVarible;
@@ -87,14 +87,13 @@ public class VMGRLaunch extends Builder {
     private final boolean markBuildAsPassedIfAllRunPassed;
     private final boolean failJobUnlessAllRunPassed;
     private final boolean userPrivateSSHKey;
-    //private final String extraAttributesForFailuresInputFile;
-    //private final boolean deleteExtraAttributesFile;
+ 
 
     private final boolean vMGRBuildArchive;
     private final boolean deleteAlsoSessionDirectory;
     private final boolean genericCredentialForSessionDelete;
     private final String archiveUser;
-    //private final String archivePassword;
+    private final Secret archivePassword;
 
     private final String famMode;
     private final String famModeLocation;
@@ -132,22 +131,15 @@ public class VMGRLaunch extends Builder {
     // Fields in config.jelly must match the parameter names in the
     // "DataBoundConstructor"
     @DataBoundConstructor
-    public VMGRLaunch(String vAPIUrl, String vAPIUser, String vAPIPassword, String vSIFName, String vSIFInputFile, String credentialInputFile, boolean deleteInputFile, boolean deleteCredentialInputFile, boolean useUserOnFarm, boolean authRequired, String vsifType, String userFarmType,
+    public VMGRLaunch(String vAPIUrl, String vAPIUser, Secret vAPIPassword, String vSIFName, String vSIFInputFile, String credentialInputFile, boolean deleteInputFile, boolean deleteCredentialInputFile, boolean useUserOnFarm, boolean authRequired, String vsifType, String userFarmType,
             boolean dynamicUserId, boolean advConfig, int connTimeout, int readTimeout, boolean envVarible, String envVaribleFile, String inaccessibleResolver, String stoppedResolver, String failedResolver, String doneResolver, String suspendedResolver, boolean waitTillSessionEnds,
             int stepSessionTimeout, boolean generateJUnitXML, boolean extraAttributesForFailures, String staticAttributeList, boolean markBuildAsFailedIfAllRunFailed, boolean failJobIfAllRunFailed, String envSourceInputFile, boolean vMGRBuildArchive, boolean deleteAlsoSessionDirectory,
-            boolean genericCredentialForSessionDelete, String archiveUser, String archivePassword, String famMode, String famModeLocation, boolean noAppendSeed, boolean markBuildAsPassedIfAllRunPassed, boolean failJobUnlessAllRunPassed, boolean userPrivateSSHKey, boolean attrValues,
+            boolean genericCredentialForSessionDelete, String archiveUser, Secret archivePassword, String famMode, String famModeLocation, boolean noAppendSeed, boolean markBuildAsPassedIfAllRunPassed, boolean failJobUnlessAllRunPassed, boolean userPrivateSSHKey, boolean attrValues,
             String attrValuesFile, String executionType, String sessionsInputFile, boolean deleteSessionInputFile, String envVariableType, String envVariableText, String attrVariableType, String attrVariableText, boolean pauseSessionOnBuildInterruption, String envSourceInputFileType,
             String executionScript, String executionShellLocation, String executionVsifFile, String defineVaribleFile, boolean defineVarible, String defineVariableType, String defineVariableText, String vAPICredentials, String credentialType) {
         this.vAPIUrl = vAPIUrl;
         this.vAPIUser = vAPIUser;
-        
-        //Store password, only if not empty
-        //this.vAPIPassword = Secret.fromString("");
-        if (!"".equals(vAPIPassword.trim())){
-        //   this.vAPIPassword = Secret.fromString(vAPIPassword);
-            ((VMGRLaunch.DescriptorImpl)getDescriptor()).setVAPIPassword(Secret.fromString(vAPIPassword));
-        }
-
+        this.vAPIPassword = vAPIPassword;
         this.vSIFName = vSIFName;
         this.vSIFInputFile = vSIFInputFile;
         this.credentialInputFile = credentialInputFile;
@@ -190,12 +182,7 @@ public class VMGRLaunch extends Builder {
         this.deleteAlsoSessionDirectory = deleteAlsoSessionDirectory;
         this.genericCredentialForSessionDelete = genericCredentialForSessionDelete;
         this.archiveUser = archiveUser;
-        
-        if (!"".equals(archivePassword.trim())){
-            ((VMGRLaunch.DescriptorImpl)getDescriptor()).setArchivePassword(Secret.fromString(archivePassword));
-        }
-
-
+        this.archivePassword = archivePassword;
         this.famMode = famMode;
         this.famModeLocation = famModeLocation;
         this.noAppendSeed = noAppendSeed;
@@ -321,17 +308,13 @@ public class VMGRLaunch extends Builder {
         return vAPIUser;
     }
 
-    /*
-    public void setVAPIPassword(String password) {
-        this.vAPIPassword = Secret.fromString(password);
-    }
-
     public Secret getVAPIPassword() {
         return vAPIPassword;
     }
-    */
 
-   
+    public Secret getArchivePassword() {
+        return archivePassword;
+    }
 
     public String getVSIFName() {
         return vSIFName;
@@ -486,26 +469,9 @@ public class VMGRLaunch extends Builder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         
-        String vAPIPassword = "";
-        if ( ((VMGRLaunch.DescriptorImpl)getDescriptor()).getVAPIPassword() != null){
-            vAPIPassword = ((VMGRLaunch.DescriptorImpl)getDescriptor()).getVAPIPassword().getPlainText();
-        } else {
-            listener.getLogger().println("Warning - no password supplied for vManager Launcher Job.");
-        }
-                    
-        String archivePassword = "";
-        if (vMGRBuildArchive && genericCredentialForSessionDelete){
-            if (((VMGRLaunch.DescriptorImpl)getDescriptor()).getArchivePassword() != null){
-                archivePassword = ((VMGRLaunch.DescriptorImpl)getDescriptor()).getArchivePassword().getPlainText();
-            } else {
-                listener.getLogger().println("Warning - User choosed to archive builds using dedicated password, but no password supplied");
-            }
-        }
-
-
-        
-      
-
+        String vAPIPassword = getVAPIPassword().getPlainText();        
+        String archivePassword = getArchivePassword().getPlainText();
+       
         String workingJobDir = build.getRootDir().getAbsolutePath();
         listener.getLogger().println("Root dir is: " + workingJobDir);
         
@@ -953,29 +919,7 @@ public class VMGRLaunch extends Builder {
     // point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        private Secret vAPIPassword;
-        private Secret archivePassword;
-        
-        
-        public void setVAPIPassword(Secret vAPIPassword) {
-            this.vAPIPassword = vAPIPassword;
-            save();
-        }
-    
-        public Secret getVAPIPassword() { 
-            return vAPIPassword;
-        }
-
-        
-        public void setArchivePassword(Secret archivePassword) {
-            this.archivePassword = archivePassword;
-            save();
-        }
-    
-        public Secret getArchivePassword() { 
-            return archivePassword;
-        }
-
+       
         /**
          * To persist global configuration information, simply store it in a
          * field and call save().
@@ -1140,18 +1084,13 @@ public class VMGRLaunch extends Builder {
             return super.configure(req, formData);
         }
 
-        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
+        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
                 @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
                 throws IOException, ServletException {
                 try {
                     String tempUser = vAPIUser;
-
-                    String tempPassword = vAPIPassword;
-                    if ("".equals(vAPIPassword.trim())){
-                        tempPassword = getVAPIPassword().getPlainText();
-                    }
-            
+                    String tempPassword = vAPIPassword.getPlainText();
                     boolean foundMatchUserPassword = false;
                     if ("credential".equals(credentialType)) {  
                         List<StandardUsernamePasswordCredentials> listOfC = CredentialsProvider.lookupCredentialsInItem(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM2, Collections.<DomainRequirement>emptyList());
@@ -1188,42 +1127,32 @@ public class VMGRLaunch extends Builder {
                 }
         }
 
-        public FormValidation doTestArchiveUser(@QueryParameter("archiveUser") final String archiveUser, @QueryParameter("archivePassword") final String archivePassword,
+        public FormValidation doTestArchiveUser(@QueryParameter("archiveUser") final String archiveUser, @QueryParameter("archivePassword") final Secret archivePassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl) throws IOException,
                 ServletException {
-            try {
-
-
-                String tempPassword = archivePassword;
-                if ("".equals(archivePassword.trim())){
-                    tempPassword = getArchivePassword().getPlainText();
+            
+                try {
+                    String tempPassword = archivePassword.getPlainText();
+                    Utils utils = new Utils();
+                    String output = utils.checkVAPIConnection(vAPIUrl, true, archiveUser, tempPassword);
+                    if (!output.startsWith("Failed")) {
+                        return FormValidation.ok("Success. " + output);
+                    } else {
+                        return FormValidation.error(output);
+                    }
+                } catch (Exception e) {
+                    return FormValidation.error("Client error : " + e.getMessage());
                 }
-
-
-                Utils utils = new Utils();
-                String output = utils.checkVAPIConnection(vAPIUrl, true, archiveUser, tempPassword);
-                if (!output.startsWith("Failed")) {
-                    return FormValidation.ok("Success. " + output);
-                } else {
-                    return FormValidation.error(output);
-                }
-            } catch (Exception e) {
-                return FormValidation.error("Client error : " + e.getMessage());
-            }
         }
 
-        public FormValidation doTestExtraStaticAttr(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
+        public FormValidation doTestExtraStaticAttr(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList,
                 @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item) throws IOException,
                 ServletException {
             
                 try {
                     String tempUser = vAPIUser;
-                    String tempPassword = vAPIPassword;
-                    if ("".equals(vAPIPassword.trim())){
-                        tempPassword = getVAPIPassword().getPlainText();
-                    }
-            
+                    String tempPassword = vAPIPassword.getPlainText();           
                     boolean foundMatchUserPassword = false;
                     if ("credential".equals(credentialType)) {
                         List<StandardUsernamePasswordCredentials> listOfC = CredentialsProvider.lookupCredentialsInItem(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM2, Collections.<DomainRequirement>emptyList());
@@ -1262,30 +1191,30 @@ public class VMGRLaunch extends Builder {
         }
 
         public FormValidation doCheckVAPICredentials(
-                @AncestorInPath Item item, // (2)
-                @QueryParameter String value // (1)
+                @AncestorInPath Item item, 
+                @QueryParameter String value 
 
         ) {
             if (item == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-                    return FormValidation.ok(); // (3)
+                    return FormValidation.ok(); 
                 }
             } else {
                 if (!item.hasPermission(Item.EXTENDED_READ)
                         && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
-                    return FormValidation.ok(); // (3)
+                    return FormValidation.ok(); 
                 }
             }
-            if (StringUtils.isBlank(value)) { // (4)
-                return FormValidation.ok(); // (4)
+            if (StringUtils.isBlank(value)) { 
+                return FormValidation.ok(); 
             }
             
-            if (CredentialsProvider.listCredentialsInItem( // (6)
-                    StandardUsernamePasswordCredentials.class, // (1)
+            if (CredentialsProvider.listCredentialsInItem( 
+                    StandardUsernamePasswordCredentials.class, 
                     item,
                     ACL.SYSTEM2,
                     Collections.<DomainRequirement>emptyList(),
-                    CredentialsMatchers.always() // (6)
+                    CredentialsMatchers.always() 
             ).isEmpty()) {
                 return FormValidation.error("Cannot find currently selected credentials");
             }

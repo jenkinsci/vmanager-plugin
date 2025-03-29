@@ -48,7 +48,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
     private boolean authRequired;
     private boolean advConfig;
     private String vAPIUser;
-    //private String vAPIPassword;
+    private Secret vAPIPassword;
     private boolean dynamicUserId;
     private int connTimeout = 1;
     private int readTimeout = 30;
@@ -94,7 +94,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public DSLPublisher(String vAPIUrl, String vAPIUser, String vAPIPassword, boolean authRequired, boolean advConfig, boolean dynamicUserId, int connTimeout, int readTimeout, boolean advancedFunctions,
+    public DSLPublisher(String vAPIUrl, String vAPIUser, Secret vAPIPassword, boolean authRequired, boolean advConfig, boolean dynamicUserId, int connTimeout, int readTimeout, boolean advancedFunctions,
             boolean retrieveSummaryReport, boolean runReport, boolean metricsReport, boolean vPlanReport, String testsViewName, String metricsViewName, String vplanViewName, int testsDepth, int metricsDepth,
             int vPlanDepth, String metricsInputType, String metricsAdvanceInput, String vPlanInputType, String vPlanAdvanceInput, String vPlanxFileName, String summaryType, boolean ctxInput,
             String ctxAdvanceInput, String freeVAPISyntax, boolean deleteReportSyntaxInputFile, String vManagerVersion, boolean sendEmail, String emailList, String emailType, String emailInputFile, boolean deleteEmailInputFile, String summaryMode, boolean ignoreSSLError, String vAPICredentials, String credentialType) {
@@ -103,11 +103,7 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
         this.authRequired = authRequired;
         this.advConfig = advConfig;
         this.vAPIUser = vAPIUser;
-        //this.vAPIPassword = vAPIPassword;
-        if (!"".equals(vAPIPassword.trim())){
-            ((DSLPublisher.DescriptorImpl)getDescriptor()).setVAPIPassword(Secret.fromString(vAPIPassword));
-        }
-
+        this.vAPIPassword = vAPIPassword;
         this.dynamicUserId = dynamicUserId;
         this.connTimeout = connTimeout;
         this.readTimeout = readTimeout;
@@ -341,16 +337,15 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
         return credentialType;
     }
 
+    public Secret getVAPIPassword() {
+        return vAPIPassword;
+    }
+
     @Override
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath fp, @Nonnull Launcher launcher, @Nonnull TaskListener tl) throws InterruptedException, IOException {
 
         
-        String vAPIPassword = "";
-        if ( ((DSLPublisher.DescriptorImpl)getDescriptor()).getVAPIPassword() != null){
-            vAPIPassword = ((DSLPublisher.DescriptorImpl)getDescriptor()).getVAPIPassword().getPlainText();
-        } else {
-            tl.getLogger().println("Warning - no password supplied for vManager Post Job.");
-        }
+        String vAPIPassword = getVAPIPassword().getPlainText();  
 
         
         this.build = run;
@@ -402,19 +397,6 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
-        private Secret vAPIPassword;
-				
-		public void setVAPIPassword(Secret vAPIPassword) {
-			this.vAPIPassword = vAPIPassword;
-            save();
-		}
-	
-		public Secret getVAPIPassword() { 
-			return vAPIPassword;
-		}
-
-
-
         /**
          * In order to load the persisted global configuration, you have to call
          * load() in the constructor.
@@ -452,23 +434,18 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
             return super.configure(req, formData);
         }
 
-        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
+        public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
                 @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
                 throws IOException, ServletException {
             try {
 
                 String tempUser = vAPIUser;
-                String tempPassword = vAPIPassword;
-                if ("".equals(vAPIPassword.trim())){
-                    tempPassword = getVAPIPassword().getPlainText();
-                }
+                String tempPassword = vAPIPassword.getPlainText();;
+               
 
                 boolean foundMatchUserPassword = false;
                 if ("credential".equals(credentialType)) {
-                    //System.out.println("Trying to find the credential...");
-                    //overwrite the plain text with the credentials
-                    //StandardUsernamePasswordCredentials c = CredentialsProvider.findCredentialById(vAPICredentials, StandardUsernamePasswordCredentials.class, item, Collections.<DomainRequirement>emptyList());
                     List<StandardUsernamePasswordCredentials> listOfC = CredentialsProvider.lookupCredentialsInItem(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM2, Collections.<DomainRequirement>emptyList());
                     Iterator<StandardUsernamePasswordCredentials> cIterator = listOfC.iterator();
                     StandardUsernamePasswordCredentials tmpHolder = null;
