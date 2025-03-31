@@ -554,6 +554,11 @@ the following format within the job working directory: 
 
 ## Change Log
 
+##### Version 4.0.1 (March 31, 2025)
+-	Fixed deprecations in 3rd party libraries
+-   Security fix - Now using Jenkins Secret Object to Encrypt saved passwords
+-   Breaking Change - You may need to reconfigure the passwords saved within the job.
+
 ##### Version 4.0.0 (Feb 18, 2025)
 -	Breaking Change - Only compatible with Jenkins version 2.479 and higher
 -	Added Support in Java 17

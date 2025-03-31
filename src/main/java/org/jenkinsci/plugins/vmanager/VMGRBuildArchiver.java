@@ -44,6 +44,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.HttpsURLConnection;
 import org.apache.commons.codec.binary.Base64;
+import hudson.util.Secret;
+
 
 /**
  *
@@ -147,10 +149,10 @@ public class VMGRBuildArchiver {
             }
             if (genericCredentialForSessionDelete) {
                 writer.append("archiveUser=" + archiveUser + "\n");
-                writer.append("archivePassword=" + archivePassword + "\n");
+                writer.append("archivePassword=" + Secret.fromString(archivePassword).getEncryptedValue() + "\n");
             } else {
                 writer.append("archiveUser=" + userUsedForLogin + "\n");
-                writer.append("archivePassword=" + passwordUsedForLogin + "\n");
+                writer.append("archivePassword=" + Secret.fromString(passwordUsedForLogin).getEncryptedValue() + "\n");
             }
             writer.append("sessions=" + sessions + "\n");
             utils.saveFileOnDisk(fileOutput, writer.toString());
@@ -184,7 +186,8 @@ public class VMGRBuildArchiver {
             } else {
 
                 String apiUrl = null;
-                String userCredentials = buildSdi.getProperty("archiveUser").trim() + ":" + buildSdi.getProperty("archivePassword").trim();
+                String decryptedPassword = Secret.fromString(buildSdi.getProperty("archivePassword").trim()).getPlainText();
+                String userCredentials = buildSdi.getProperty("archiveUser").trim() + ":" + decryptedPassword;
                 boolean requireAuth = true;
                 if ("false".equals(buildSdi.getProperty("requireAuth").trim())) {
                     requireAuth = false;

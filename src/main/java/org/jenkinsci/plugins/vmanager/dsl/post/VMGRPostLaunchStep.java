@@ -32,14 +32,13 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
 import java.io.IOException;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import jakarta.servlet.ServletException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.vmanager.Utils;
-//import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-//import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -58,7 +57,6 @@ public class VMGRPostLaunchStep extends Step {
     private boolean authRequired;
     private boolean advConfig;
     private String vAPIUser;
-    private String vAPIPassword;
     private boolean dynamicUserId;
     private int connTimeout = 1;
     private int readTimeout = 30;
@@ -82,7 +80,7 @@ public class VMGRPostLaunchStep extends Step {
     private String vPlanInputType;
     private String vPlanAdvanceInput;
     private String vPlanxFileName;
-
+    private String vAPIPassword;
     private String summaryType;
     private boolean ctxInput;
     private String ctxAdvanceInput;
@@ -278,10 +276,6 @@ public class VMGRPostLaunchStep extends Step {
         return vAPIUser;
     }
 
-    public String getVAPIPassword() {
-        return vAPIPassword;
-    }
-
     public boolean isDynamicUserId() {
         return dynamicUserId;
     }
@@ -294,6 +288,10 @@ public class VMGRPostLaunchStep extends Step {
         return readTimeout;
     }
 
+    public String getVAPIPassword() {
+        return vAPIPassword;
+    }
+
     @Override
     public StepExecution start(StepContext context) throws Exception {
         return new VMGRPostLaunchStepImpl(this, context);
@@ -302,6 +300,7 @@ public class VMGRPostLaunchStep extends Step {
     @Extension
     public static class DescriptorImpl extends StepDescriptor {
 
+        
         public DescriptorImpl() {
             load();
         }

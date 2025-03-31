@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.vmanager.VMGRRun;
 
 public class DSLProjectAction extends PostActionBase implements Serializable, Action {
 
-    private static final long serialVersionUID = 3000009076155338046L;
+    private static final long serialVersionUID = 3000009076155338047L;
     private transient  Job<?, ?> project;
 
     @Override

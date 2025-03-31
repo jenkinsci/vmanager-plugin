@@ -183,7 +183,7 @@
                  <f:optionalBlock name="extraAttributesForFailures"  title="Add extra attributes for failure stack" description="If selected, the job will add extra attributes for failure stack." checked="${instance.extraAttributesForFailures}" inline="true">
  		 
            <f:entry title="Attribute List (attribute codes must be used)" field="staticAttributeList" description="Static extra attributes for failure stack, separated by comma"><f:textbox /></f:entry>
-           <f:validateButton title="${%Test Attributes Validity}" progress="${%Testing Attribute Codes Validity...}" method="testExtraStaticAttr" with="vAPIUser,vAPIPassword,vAPIUrl,authRequired,staticAttributeList" />
+           <f:validateButton title="${%Test Attributes Validity}" progress="${%Testing Attribute Codes Validity...}" method="testExtraStaticAttr" with="vAPIUser,vAPIPassword,vAPIUrl,authRequired,staticAttributeList,credentialType,vAPICredentials" />
   		 
  		 </f:optionalBlock>
 		</f:optionalBlock>

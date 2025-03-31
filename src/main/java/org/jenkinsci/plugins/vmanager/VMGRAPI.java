@@ -9,6 +9,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
+
 import java.io.IOException;
 
 import jakarta.servlet.ServletException;
@@ -24,7 +26,7 @@ public class VMGRAPI extends Builder {
 	private final String vAPIUrl;
 	private final boolean authRequired;
 	private final String vAPIUser;
-	private final String vAPIPassword;
+	private final Secret vAPIPassword;
 	private final String vAPIInput;
 	private final String vJsonInputFile;
 	private final boolean deleteInputFile;
@@ -41,7 +43,7 @@ public class VMGRAPI extends Builder {
 	// Fields in config.jelly must match the parameter names in the
 	// "DataBoundConstructor"
 	@DataBoundConstructor
-	public VMGRAPI(String vAPIUrl, String vAPIUser, String vAPIPassword, String vAPIInput, String vJsonInputFile, boolean deleteInputFile, boolean authRequired, String apiType,
+	public VMGRAPI(String vAPIUrl, String vAPIUser, Secret vAPIPassword, String vAPIInput, String vJsonInputFile, boolean deleteInputFile, boolean authRequired, String apiType,
 			boolean dynamicUserId, String apiUrl, String requestMethod, boolean advConfig, int connTimeout, int readTimeout) {
 		this.vAPIUrl = vAPIUrl;
 		this.vAPIUser = vAPIUser;
@@ -75,10 +77,6 @@ public class VMGRAPI extends Builder {
 
 	public String getVAPIUser() {
 		return vAPIUser;
-	}
-
-	public String getVAPIPassword() {
-		return vAPIPassword;
 	}
 
 	public String getVAPIInput() {
@@ -117,23 +115,20 @@ public class VMGRAPI extends Builder {
 		return connTimeout;
 	}
 
+	public Secret getVAPIPassword() {
+        return vAPIPassword;
+    }
+
 	public int getReadTimeout() {
 		return readTimeout;
 	}
-	/*
-	public ListBoxModel doFillRequestMethodItems(){
-
-	    return new ListBoxModel(
-	        new Option("POST", "POST", "POST".equals(requestMethod)),
-	        new Option("GET", "GET", "GET".equals(requestMethod)),
-	        new Option("PUT", "PUT", "PUT".equals(requestMethod)),
-	    	new Option("DELETE", "DELETE", "DELETE".equals(requestMethod)));
-	}
-	*/
+	
 	
 
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+
+		String vAPIPassword = getVAPIPassword().getPlainText();  
 
 		listener.getLogger().println("The HOST for vAPI is: " + vAPIUrl);
 		listener.getLogger().println("The vAPIUser for vAPI is: " + vAPIUser);
@@ -222,9 +217,9 @@ public class VMGRAPI extends Builder {
 		/**
 		 * To persist global configuration information, simply store it in a
 		 * field and call save().
-		 * 
-		
+		 */
 
+		
 		/**
 		 * In order to load the persisted global configuration, you have to call
 		 * load() in the constructor.
@@ -305,13 +300,13 @@ public class VMGRAPI extends Builder {
 
 		
 
-		public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
+		public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
 				@QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired) throws IOException,
 				ServletException {
 			try {
-
+				String tempPassword = vAPIPassword.getPlainText();
 				Utils utils = new Utils();
-				String output = utils.checkVAPIConnection(vAPIUrl, authRequired, vAPIUser, vAPIPassword);
+				String output = utils.checkVAPIConnection(vAPIUrl, authRequired, vAPIUser, tempPassword);
 				if (!output.startsWith("Failed")) {
 					return FormValidation.ok("Success. " + output);
 				} else {

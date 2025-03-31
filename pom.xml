@@ -22,7 +22,7 @@
   </licenses>
   
   <properties>
-    <revision>4.0.0</revision>
+    <revision>4.0.1</revision>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/vmanager-plugin</gitHubRepo>
     <findbugs.failOnError>false</findbugs.failOnError>
