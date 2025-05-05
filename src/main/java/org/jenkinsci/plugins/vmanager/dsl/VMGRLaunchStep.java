@@ -8,6 +8,7 @@ import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
@@ -22,6 +23,7 @@ import javax.annotation.Nonnull;
 import jakarta.servlet.ServletException;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.vmanager.Utils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -30,6 +32,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.verb.POST;
 
 public class VMGRLaunchStep extends Step {
 
@@ -821,10 +824,16 @@ public class VMGRLaunchStep extends Step {
             return super.configure(req, formData);
         }
 
+        @POST
         public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired) throws IOException,
+                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @AncestorInPath Item item) throws IOException,
                 ServletException {
-            try {
+            
+                    if (item == null) { // no context
+                        return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                    }
+                    item.checkPermission(Item.CONFIGURE);
+                    try {
 
                 Utils utils = new Utils();
                 String output = utils.checkVAPIConnection(vAPIUrl, authRequired, vAPIUser, vAPIPassword);
@@ -838,10 +847,17 @@ public class VMGRLaunchStep extends Step {
             }
         }
 
+        @POST
         public FormValidation doTestArchiveUser(@QueryParameter("archiveUser") final String archiveUser, @QueryParameter("archivePassword") final String archivePassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl) throws IOException,
+                @QueryParameter("vAPIUrl") final String vAPIUrl, @AncestorInPath Item item) throws IOException,
                 ServletException {
-            try {
+            
+                    if (item == null) { // no context
+                        return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                    }
+                    item.checkPermission(Item.CONFIGURE);
+
+                    try {
 
                 Utils utils = new Utils();
                 String output = utils.checkVAPIConnection(vAPIUrl, true, archiveUser, archivePassword);
@@ -855,10 +871,17 @@ public class VMGRLaunchStep extends Step {
             }
         }
 
+        @POST
         public FormValidation doTestExtraStaticAttr(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final String vAPIPassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList) throws IOException,
+                @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList, @AncestorInPath Item item) throws IOException,
                 ServletException {
-            try {
+            
+                    if (item == null) { // no context
+                        return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                    }
+                    item.checkPermission(Item.CONFIGURE);
+                    
+                    try {
 
                 Utils utils = new Utils();
                 String output = utils.checkExtraStaticAttr(vAPIUrl, authRequired, vAPIUser, vAPIPassword, staticAttributeList);
