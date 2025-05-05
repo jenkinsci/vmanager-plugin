@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.vmanager;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Item;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -17,9 +18,11 @@ import jakarta.servlet.ServletException;
 
 import net.sf.json.JSONObject;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.verb.POST;
 
 public class VMGRAPI extends Builder {
 
@@ -299,10 +302,16 @@ public class VMGRAPI extends Builder {
 		}
 
 		
-
+		@POST
 		public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
-				@QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired) throws IOException,
+				@QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @AncestorInPath Item item) throws IOException,
 				ServletException {
+
+			if (item == null) { // no context
+				return FormValidation.error("Current Jenkins user lacks context, so validation will not be carried out.");
+			}
+			item.checkPermission(Item.CONFIGURE);
+
 			try {
 				String tempPassword = vAPIPassword.getPlainText();
 				Utils utils = new Utils();

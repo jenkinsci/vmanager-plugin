@@ -40,6 +40,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.verb.POST;
 
 public class VMGRLaunch extends Builder {
 
@@ -1084,10 +1085,17 @@ public class VMGRLaunch extends Builder {
             return super.configure(req, formData);
         }
 
+        @POST
         public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
                 @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
                 throws IOException, ServletException {
+
+                if (item == null) { // no context
+                    return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                }
+                item.checkPermission(Item.CONFIGURE);
+
                 try {
                     String tempUser = vAPIUser;
                     String tempPassword = vAPIPassword.getPlainText();
@@ -1127,10 +1135,16 @@ public class VMGRLaunch extends Builder {
                 }
         }
 
+        @POST
         public FormValidation doTestArchiveUser(@QueryParameter("archiveUser") final String archiveUser, @QueryParameter("archivePassword") final Secret archivePassword,
-                @QueryParameter("vAPIUrl") final String vAPIUrl) throws IOException,
+                @QueryParameter("vAPIUrl") final String vAPIUrl, @AncestorInPath Item item) throws IOException,
                 ServletException {
             
+                if (item == null) { // no context
+                    return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                }
+                item.checkPermission(Item.CONFIGURE);
+
                 try {
                     String tempPassword = archivePassword.getPlainText();
                     Utils utils = new Utils();
@@ -1145,11 +1159,17 @@ public class VMGRLaunch extends Builder {
                 }
         }
 
+        @POST
         public FormValidation doTestExtraStaticAttr(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired, @QueryParameter("staticAttributeList") final String staticAttributeList,
                 @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item) throws IOException,
                 ServletException {
             
+                if (item == null) { // no context
+                    return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                }
+                item.checkPermission(Item.CONFIGURE);
+
                 try {
                     String tempUser = vAPIUser;
                     String tempPassword = vAPIPassword.getPlainText();           

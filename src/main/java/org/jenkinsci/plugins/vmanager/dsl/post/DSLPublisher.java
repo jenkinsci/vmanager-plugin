@@ -23,6 +23,8 @@ import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.verb.POST;
+
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
@@ -434,11 +436,18 @@ public class DSLPublisher extends Recorder implements SimpleBuildStep, Serializa
             return super.configure(req, formData);
         }
 
+        @POST
         public FormValidation doTestConnection(@QueryParameter("vAPIUser") final String vAPIUser, @QueryParameter("vAPIPassword") final Secret vAPIPassword,
                 @QueryParameter("vAPIUrl") final String vAPIUrl, @QueryParameter("authRequired") final boolean authRequired,
                 @QueryParameter("credentialType") final String credentialType, @QueryParameter("vAPICredentials") final String vAPICredentials, @AncestorInPath Item item)
                 throws IOException, ServletException {
-            try {
+            
+                if (item == null) { // no context
+                    return FormValidation.error("Current Jenkins user context is null, so validation will not be carried out.");
+                }
+                item.checkPermission(Item.CONFIGURE);
+            
+                try {
 
                 String tempUser = vAPIUser;
                 String tempPassword = vAPIPassword.getPlainText();;
