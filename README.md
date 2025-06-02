@@ -10,11 +10,14 @@ Plugin development and support is made by Cadence Design Systems.
 
 ### Plugin Dependency
 
-Please make sure you have **dashboard-view**, **workflow-step-api** & **credentials** 
+Please make sure you have **workflow-step-api** & **credentials** 
 plugin installed on your Jenkins before trying to install this plugin.
 
-Also, in case you want to chart over the runs results, install the
-**Junit Plugin** as well.
+In case you want to chart over the runs results, install the
+**Junit Plugin** plugin.
+
+In case you want to show the latest n job results, install the
+**dashboard-view** plugin.
 
 ![](./docs/images/JunitA.png "Jenkins > Cadence vManager Plugin > JunitA.png")
 ![](./docs/images/Dashboard.png "Jenkins > Cadence vManager Plugin > Dashboard.png")
@@ -553,6 +556,9 @@ the following format within the job working directory: 
 ![](./docs/images/report_conf.png "Jenkins > Cadence vManager Plugin > report_conf.png")
 
 ## Change Log
+
+##### Version 4.0.2 (June 02, 2025)
+-	Move Dashboard-View to Optional
 
 ##### Version 4.0.1 (March 31, 2025)
 -	Fixed deprecations in 3rd party libraries
