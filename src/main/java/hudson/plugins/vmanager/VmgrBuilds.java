@@ -166,7 +166,7 @@ public class VmgrBuilds extends DashboardPortlet {
         return String.valueOf(build.getNumber());
     }
 
-    @Extension
+    @Extension(optional = true)
     public static class DescriptorImpl extends Descriptor<DashboardPortlet> {
 
         @Override
