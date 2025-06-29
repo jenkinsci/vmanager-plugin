@@ -153,7 +153,7 @@
 </f:optionalBlock>
 </f:block> 
  <f:block>    
-     <f:optionalBlock name="vmGRBuildArchive"  title="Delete Verisium Manager Session when build is removed" description="If selected, the plugin will call Verisium Manager to delete the session when a manual/automatically build deletion is triggered" checked="${instance.vmGRBuildArchive}" inline="true">
+     <f:optionalBlock name="vMGRBuildArchive"  title="Delete Verisium Manager Session when build is removed" description="If selected, the plugin will call Verisium Manager to delete the session when a manual/automatically build deletion is triggered" checked="${instance.vMGRBuildArchive}" inline="true">
     	
          
          <f:radioBlock name="famMode" value="false" title="Sync Delete Methodology (built-in)" checked="${instance.famMode == 'false'}" inline="true">
