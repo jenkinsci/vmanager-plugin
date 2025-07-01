@@ -12,8 +12,8 @@ The array is given as an argument to the declaration of the pipeline object.
 
 The properties and options available are listed below in alphabetic order. Some have more details described in the main readme page.
 
-| Property |  Type  | Description | Default |
-|:-----|:--------:|:--------|:--------|
+| Property |  Type  | Description | Default | Mandatory |
+|:-----|:--------:|:--------|:--------|:--------:|
 | advConfig|boolean |Enable customization of the connection parameters |false | no |
 |archivePassword|string|password for session delete operation (only valid with genericCredentialForSessionDelete=true)|empty string|no|
 |archiveUser|string|userid for session delete operation (only valid with genericCredentialForSessionDelete=true)|empty string|no|
@@ -75,8 +75,8 @@ The properties and options available are listed below in alphabetic order. Some 
 
 ## Verisium Manager Post Build Actions
 
-| Property |  Type  | Description | Default |
-|:-----|:--------:|:--------|:--------|
+| Property |  Type  | Description | Default | Mandatory |
+|:-----|:--------:|:--------|:--------|:--------:|
 |advConfig|boolean|Enable customization of the connection parameters|false|yes|
 |authRequired|boolean|Set if to authenticate the REST API or not|false|yes|
 |connTimeout|integer|Timeout (in minutes) for REST connection to establish connectivity|1|yes|
