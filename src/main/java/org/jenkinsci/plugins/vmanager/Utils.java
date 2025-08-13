@@ -1342,6 +1342,11 @@ public class Utils {
 
     }
 
+    public OutputStream getRemoteDiskOutoutStream(String fileOnDiskPath) throws Exception {
+        hudson.FilePath newFile = filePath.child(fileOnDiskPath);
+        return newFile.write();
+    }
+
     public BufferedReader readFileOnDisk(String fileOnDiskPath) throws IOException {
 
         if (filePath != null) {
