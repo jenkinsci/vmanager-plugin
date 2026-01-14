@@ -427,7 +427,7 @@ The Verisium Manager Plugin also supports a post-build action that brings:
 
 The action is also available for pipeline usage using the
 function **vmanagerPostBuildActions()**
-Accepted values for the pipeline are available here [here](./properties.md).  You can also get them using the pipeline syntax builder.
+Accepted values for the pipeline are available [here](./properties.md).  You can also get them using the pipeline syntax builder.
 
 *Pre-requisite and limitation when using the post build
 action:*
@@ -483,7 +483,7 @@ build. (vManager Analysis)*]
 
 The Summary Report is part of the Plugin Advanced Functions, and is
 supported as part of pipeline dsl or traditional post plugin.
-Accepted values for the pipeline are available here [here](./properties.md).  You can also get them using the pipeline syntax builder.
+Accepted values for the pipeline are available [here](./properties.md).  You can also get them using the pipeline syntax builder.
 
 ![](./docs/images/report_tests.png "Jenkins > Cadence vManager Plugin > report_tests.png")
 
@@ -551,7 +551,7 @@ only be achieved by adding the flag \"-jenkins true\" within the batch
 command -- which only supported starting 19.09.  In order for the plugin
 to find the report and show it to the user - please place the report in
 the following format within the job working directory: 
-**\${BUILD\_NUMBER}.\${BUILD\_ID}.summary.report**
+**\${BUILD\_NUMBER}.\${BUILD\_ID}.user.summary.report**
 
 \"**Email**\" is not offered as part of this mode.
 
@@ -559,6 +559,9 @@ the following format within the job working directory: 
 ![](./docs/images/report_conf.png "Jenkins > Cadence vManager Plugin > report_conf.png")
 
 ## Change Log
+
+##### Version 4.0.4 (Jan 14, 2026)
+-	Enhenced the ability to bring your own summary report in case you don\'t want to fetch using vAPI
 
 ##### Version 4.0.3 (June 29, 2025)
 -	Fixed Typo in one of the feilds that prevented from the pipeline syntax to generate archiving session flag

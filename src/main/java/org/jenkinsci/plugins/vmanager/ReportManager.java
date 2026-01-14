@@ -41,6 +41,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -68,6 +69,9 @@ import org.json.simple.JSONArray;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  *
@@ -572,11 +576,11 @@ public class ReportManager {
                 }
                 StringBuffer writer = new StringBuffer();
                 writer.append(output);
-                //writer.flush();
+               
 
                 utils.saveFileOnDisk(fileOutput, writer.toString());
                 utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report");
-                //writer.close();
+               
 
                 if (!this.testMode) {
                     listener.getLogger().println("Report Summary was created succesfully.");
@@ -588,19 +592,47 @@ public class ReportManager {
 
     }
 
+    private void convertBYORToJenkinsType(int buildNumber, String buildId, String jobWorkingDir)  throws Exception {
+
+        try{
+            
+            String output = utils.getFilePath().child(buildNumber + "." + buildId + ".user.summary.report").readToString();
+            //String output = Files.readString(Path.of(utils.getFilePath().child(buildNumber + "." + buildId + ".user.summary.report").getRemote()), StandardCharsets.UTF_8);
+
+            int start = output.indexOf("<head>");
+            int end = output.indexOf("</head>") + 7;
+            output = output.substring(0, start) + output.substring(end, output.length());
+
+            start = output.indexOf("<style>");
+            end = output.indexOf("</style>") + 8;
+            output = output.substring(0, start) + output.substring(end, output.length());
+
+            start = output.indexOf("<script>");
+            end = output.indexOf("</script>") + 9;
+            output = output.substring(0, start) + output.substring(end, output.length());
+
+            start = output.indexOf("<script>");
+            end = output.indexOf("</script>") + 9;
+            output = output.substring(0, start) + output.substring(end, output.length());
+
+            output = output.replace("<html>", "");
+            output = output.replace("</html>", "");
+            output = output.replace("<body>", "");
+            output = output.replace("</body>", "");
+
+            FilePath outFile = utils.getFilePath().child(buildNumber + "." + buildId + ".summary.report");
+            outFile.write(output, "UTF-8"); 
+
+
+        } catch (IOException e){
+            listener.getLogger().println("Failed to find the user provided summary report file: " + utils.getFilePath().child(buildNumber + "." + buildId + ".user.summary.report").getRemote());
+            throw e;
+        }
+        
+
+    }
+
     public void retrievReportFromServer(boolean isStreamingOn,Launcher launcher) throws Exception {
-
-        //In case user choose to bring the report manualy skip and return
-        if (summaryReportParams.summaryMode.equals("selfmade")) {
-            return;
-        }
-
-        HttpURLConnection conn = null;
-
-        String apiURL = vAPIConnectionParam.vAPIUrl + "/rest/reports/generate-summary-report";
-        if (isStreamingOn) {
-            apiURL = vAPIConnectionParam.vAPIUrl + "/rest/reports/stream-summary-report";
-        }
 
         int buildNumber = 20;
         String buildId = "20";
@@ -613,6 +645,28 @@ public class ReportManager {
             jobWorkingDir = vmgrRun.getJobWorkingDir();
             jobRootDir = build.getRootDir().getAbsolutePath();
         }
+
+
+        //In case user choose to bring the report manualy skip and return
+        if (summaryReportParams.summaryMode.equals("selfmade")) {
+            listener.getLogger().println("User choose to bring the report manually.  Skipping automatic retrieval...");
+
+            listener.getLogger().println("Converting Users Report Summary into Jenkins format....");
+            convertBYORToJenkinsType( buildNumber,  buildId, jobWorkingDir);
+            listener.getLogger().println("Copying over user report summary into Jenkins job location at master....");
+            utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report");
+            listener.getLogger().println("Report Summary was copied succesfully.");
+            return;
+        }
+
+        HttpURLConnection conn = null;
+
+        String apiURL = vAPIConnectionParam.vAPIUrl + "/rest/reports/generate-summary-report";
+        if (isStreamingOn) {
+            apiURL = vAPIConnectionParam.vAPIUrl + "/rest/reports/stream-summary-report";
+        }
+
+        
         BufferedReader br = null;
         try {
             conn = utils.getVAPIConnection(apiURL, vAPIConnectionParam.authRequired, vAPIConnectionParam.vAPIUser, vAPIConnectionParam.vAPIPassword, "POST", vAPIConnectionParam.dynamicUserId, buildId, buildNumber, jobRootDir, listener, vAPIConnectionParam.connTimeout, vAPIConnectionParam.readTimeout, vAPIConnectionParam.advConfig);
@@ -680,44 +734,7 @@ public class ReportManager {
                 }
                 
                 
-                /*
-                listener.getLogger().println("4");
-                br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-                listener.getLogger().println("5");
-                String fileOutput;
-                StringBuffer sb;
-                String output;
-                if (isStreamingOn) {
-                    listener.getLogger().println("6");
-                    fileOutput = buildNumber + "." + buildId + ".summary.report";
-                    StringBuffer writer = new StringBuffer();
-                    while ((output = br.readLine()) != null) {
-                        listener.getLogger().println("9");
-                        writer.append(output);
-                        
-                    }
-                    if (utils.getFilePath() == null){
-                        //Pipeline always run on master
-                        fileOutput = jobWorkingDir + File.separator + fileOutput;            
-                    }
-                    utils.saveFileOnDisk(fileOutput, writer.toString());
-                    utils.moveFromNodeToMaster(buildNumber + "." + buildId + ".summary.report");
-
-                    
-                    if (!this.testMode) {
-                        listener.getLogger().println("Report Summary was created succesfully.");
-                    }
-                } else {
-                    listener.getLogger().println("7");
-                    sb = new StringBuffer();
-                    while ((output = br.readLine()) != null) {
-                        sb.append(output);
-                        listener.getLogger().println("8");
-                    }
-                    fetchFromRemoteURL(sb.toString());
-                    listener.getLogger().println("10");
-                }
-                */
+              
 
             } else {
                 br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "UTF-8"));
