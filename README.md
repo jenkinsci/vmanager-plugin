@@ -561,7 +561,7 @@ the following format within the job working directory: 
 ## Change Log
 
 ##### Version 4.0.4 (Jan 14, 2026)
--	Enhenced the ability to bring your own summary report in case you don\'t want to fetch using vAPI
+-	Improved the ability to provide your own summary report when you prefer not to retrieve it via vAPI.
 
 ##### Version 4.0.3 (June 29, 2025)
 -	Fixed Typo in one of the feilds that prevented from the pipeline syntax to generate archiving session flag
