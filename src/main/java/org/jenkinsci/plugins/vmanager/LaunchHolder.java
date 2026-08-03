@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class LaunchHolder {
 
@@ -132,7 +132,7 @@ public class LaunchHolder {
                         abortVManagerSessions(logger, url, requireAuth, user, password, listener, dynamicUserId, buildNumber, workPlacePath, buildID, connConnTimeOut, connReadTimeout, advConfig, notInTestMode, listOfSessions, workingJobDir);
                     } catch (Exception ex) {
                         listener.getLogger().print("Failed to delete session during build removal." + ex.getMessage());
-                        listener.getLogger().println(ExceptionUtils.getFullStackTrace(ex));
+                        listener.getLogger().println(ExceptionUtils.getStackTrace(ex));
                     }
                 }
 
