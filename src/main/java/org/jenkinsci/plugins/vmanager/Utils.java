@@ -37,8 +37,8 @@ import javax.net.ssl.*;
 import org.apache.commons.codec.binary.Base64;
 
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class Utils {
 
@@ -1456,14 +1456,14 @@ public class Utils {
                 jobListener.getLogger().println(" " + ste);
             }
 
-            jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(e));
+            jobListener.getLogger().println(ExceptionUtils.getStackTrace(e));
         } catch (InterruptedException ex) {
             jobListener.getLogger().println(ex.getMessage());
             for (StackTraceElement ste : ex.getStackTrace()) {
                 jobListener.getLogger().println(" " + ste);
             }
 
-            jobListener.getLogger().println(ExceptionUtils.getFullStackTrace(ex));
+            jobListener.getLogger().println(ExceptionUtils.getStackTrace(ex));
         } finally {
             if (inError != null){
                 inError.close();

@@ -31,8 +31,8 @@ import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 import org.kohsuke.stapler.AncestorInPath;
 
@@ -871,7 +871,7 @@ public class VMGRLaunch extends Builder {
                 listener.getLogger().println(" " + ste);
             }
 
-            listener.getLogger().println(ExceptionUtils.getFullStackTrace(e));
+            listener.getLogger().println(ExceptionUtils.getStackTrace(e));
 
             return false;
         }

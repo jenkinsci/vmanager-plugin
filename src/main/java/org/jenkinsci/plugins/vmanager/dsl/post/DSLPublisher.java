@@ -34,7 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.vmanager.SummaryReportParams;
 import org.jenkinsci.plugins.vmanager.Utils;
 import org.jenkinsci.plugins.vmanager.VAPIConnectionParam;
